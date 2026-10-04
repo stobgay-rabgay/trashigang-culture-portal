@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trashigang Dzongkhag - Culture Sector Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .top-navbar { background-color: #6b1d1d; color: white; }
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background-color: #ffffff;
+            border-right: 1px solid #dee2e6;
+        }
+        .sidebar .nav-link {
+            color: #333;
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            display: block;
+            text-decoration: none;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: #f0e6e6;
+            color: #6b1d1d;
+        }
+        .role-btn {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .role-btn:hover { background-color: rgba(255, 255, 255, 0.3); color: white; }
+        .role-btn.active-role { background-color: #ffffff; color: #6b1d1d; font-weight: bold; }
+        details summary { list-style: none; cursor: pointer; }
+        details summary::-webkit-details-marker { display: none; }
+        .sub-menu { padding-left: 15px; }
+        .sub-menu a { font-size: 0.9rem; padding: 6px 12px; }
+        .badge-status { font-size: 0.85rem; padding: 0.4em 0.7em; }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar top-navbar px-3">
+        <span class="navbar-brand text-white fw-bold">Trashigang Dzongkhag - Culture Sector</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-light me-2 small">Switch Mode:</span>
+            <a href="/switch-role?role=Applicant" class="role-btn {% if active_role == 'Applicant' %}active-role{% endif %}">Applicant</a>
+            <a href="/switch-role?role=Admin" class="role-btn {% if active_role == 'Admin' %}active-role{% endif %}">Admin</a>
+            <a href="/switch-role?role=Dzongdag" class="role-btn {% if active_role == 'Dzongdag' %}active-role{% endif %}">Dzongdag</a>
+            <a href="/switch-role?role=Dzongrab" class="role-btn {% if active_role == 'Dzongrab' %}active-role{% endif %}">Dzongrab</a>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            
+            <!-- Sidebar Navigation -->
+            <nav class="col-md-3 col-lg-2 sidebar p-3">
+                <div class="text-uppercase text-muted small fw-bold mb-3 px-2">
+                    {{ active_role }} Menu
+                </div>
+                
+                <div class="nav flex-column">
+                    <a class="nav-link {% if view == 'construction' %}active{% endif %}" href="/?view=construction"><i class="bi bi-building me-2"></i>Construction</a>
+                    <a class="nav-link {% if view == 'notesheet' %}active{% endif %}" href="/?view=notesheet"><i class="bi bi-file-earmark-text me-2"></i>Notesheet</a>
+                    <a class="nav-link {% if view == 'religious' %}active{% endif %}" href="/?view=religious"><i class="bi bi-flower1 me-2"></i>Religious Activities</a>
+                    <a class="nav-link {% if view == 'calendar' %}active{% endif %}" href="/?view=calendar"><i class="bi bi-calendar3 me-2"></i>Event Calendar</a>
+
+                    {% if active_role == 'Admin' %}
+                    <hr class="my-3">
+                    <div class="text-uppercase text-muted small fw-bold mb-2 px-2">Admin Reports</div>
+                    
+                    <a class="nav-link {% if view == 'summary_docs' %}active{% endif %}" href="/?view=summary_docs"><i class="bi bi-inbox me-2"></i>Documents Received</a>
+                    
+                    <details open class="mb-2">
+                        <summary class="nav-link d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-bar-chart-line me-2"></i>Summary Reports</span>
+                            <i class="bi bi-chevron-down small"></i>
+                        </summary>
+                        <div class="sub-menu mt-1">
+                            <a class="nav-link {% if view == 'report_construction' %}active{% endif %}" href="/?view=report_construction"><i class="bi bi-tools me-2"></i>Construction Summary</a>
+                            <a class="nav-link {% if view == 'report_notesheet' %}active{% endif %}" href="/?view=report_notesheet"><i class="bi bi-journal-text me-2"></i>Notesheet Summary</a>
+                            <a class="nav-link {% if view == 'report_religious' %}active{% endif %}" href="/?view=report_religious"><i class="bi bi-sun me-2"></i>Religious Activities</a>
+                        </div>
+                    </details>
+
+                    <a class="nav-link {% if view == 'inventory' %}active{% endif %}" href="/?view=inventory"><i class="bi bi-box-seam me-2"></i>Culture Inventory</a>
+                    {% endif %}
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                {% if msg %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ msg }}
+                    <a href="/?view={{ view }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                {% endif %}
+
+                <!-- NOTESHEET VIEW -->
+                {% if view == 'notesheet' %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Notesheet Section</h2>
+                </div>
+
+                {% if active_role == 'Admin' %}
+                <div class="card shadow-sm mb-4 border-primary">
+                    <div class="card-header bg-primary text-white fw-bold">
+                        <i class="bi bi-pencil-square me-2"></i>Create New Notesheet (Admin Action)
+                    </div>
+                    <div class="card-body">
+                        <form action="/add-notesheet" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold small">Notesheet Subject / Title:</label>
+                                    <input type="text" name="title" class="form-control form-control-sm" required placeholder="e.g. Budget Sanction for Dzong Wall Restoration">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold small">Send to Supervisor:</label>
+                                    <select name="target_supervisor" class="form-select form-select-sm">
+                                        <option value="Dzongdag">Dzongdag (Executive)</option>
+                                        <option value="Dzongrab">Dzongrab (Deputy)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold small">Notesheet Proposal Details:</label>
+                                    <textarea name="details" class="form-control form-control-sm" rows="3" required placeholder="Write detailed notesheet remarks and recommendations here..."></textarea>
+                                </div>
+                                <div class="col-md-12 text-end">
+                                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-4">Submit Notesheet</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+                <h5 class="fw-bold mb-3">Submitted Notesheets</h5>
+                {% for ns in notesheets %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title text-danger mb-0">{{ ns.id }}: {{ ns.title }}</h5>
+                            <span class="badge {% if 'Approved' in ns.status %}bg-success{% else %}bg-warning text-dark{% endif %} badge-status">{{ ns.status }}</span>
+                        </div>
+                        <p class="text-muted small mb-2">Submitted By: {{ ns.submitted_by }}</p>
+                        <p class="card-text">{{ ns.details }}</p>
+
+                        {% if ns.remarks %}
+                        <div class="alert alert-light border-start border-4 border-warning py-2 my-2">
+                            <small class="fw-bold text-muted">Supervisor Remarks:</small>
+                            <p class="mb-0">{{ ns.remarks }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Executive Action Panel for Notesheet -->
+                        {% if active_role in ['Dzongdag', 'Dzongrab'] and not 'Approved' in ns.status %}
+                        <div class="border-top pt-3 mt-3">
+                            <h6 class="fw-bold">Executive Action Panel ({{ active_role }})</h6>
+                            <form action="/notesheet-action" method="POST">
+                                <input type="hidden" name="ns_id" value="{{ ns.id }}">
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm" name="remarks" placeholder="Enter Approval / Review Remarks">
+                                </div>
+                                <button type="submit" name="action_type" value="approve" class="btn btn-success btn-sm">Approve Notesheet</button>
+                                <button type="submit" name="action_type" value="return" class="btn btn-danger btn-sm">Return Notesheet</button>
+                            </form>
+                        </div>
+                        {% endif %}
+
+                        <!-- Download PDF Button for Approved Notesheet -->
+                        {% if 'Approved' in ns.status %}
+                        <div class="mt-3 border-top pt-2">
+                            <a href="/download-notesheet-pdf/{{ ns.id }}" class="btn btn-danger btn-sm">
+                                <i class="bi bi-file-pdf me-1"></i> Download Approved Notesheet PDF
+                            </a>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- SUMMARY REPORTS VIEW -->
+                {% elif view.startswith('report_') or view == 'summary_docs' %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Summary Report View: <span class="text-primary">{{ view.replace('report_', '').replace('_', ' ').title() }}</span></h2>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h5 class="fw-bold">Report Analytics Summary</h5>
+                        <p class="text-muted">Filtered overview for {{ view.replace('report_', '').replace('_', ' ').title() }}.</p>
+
+                        <table class="table table-bordered table-hover mt-3">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ref ID</th>
+                                    <th>Applicant / Title</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in apps %}
+                                <tr>
+                                    <td>{{ app.id }}</td>
+                                    <td>{{ app.applicant }}</td>
+                                    <td><span class="badge bg-secondary">{{ app.construction_type }}</span></td>
+                                    <td><span class="badge bg-success">{{ app.status }}</span></td>
+                                    <td>
+                                        <a href="/download-signed-package/{{ app.id }}" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-file-pdf"></i> Export PDF
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No records found for this summary report view.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- DEFAULT CONSTRUCTION / MAIN VIEW -->
+                {% else %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Heritage Clearance Applications</h2>
+                </div>
+
+                {% for app in apps %}
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 text-danger fw-bold">Ref: {{ app.id }} - {{ app.applicant }}</h5>
+                        <span class="badge bg-success badge-status">{{ app.status }}</span>
+                    </div>
+                    <div class="card-body">
+                        {% if app.recipient_to or app.recipient_dept or app.recipient_address %}
+                        <div class="p-2 mb-3 bg-light rounded border">
+                            <strong class="text-secondary">Recipient / Addressee:</strong><br/>
+                            <small>
+                                {% if app.recipient_to %}To: {{ app.recipient_to }} | {% endif %}
+                                {% if app.recipient_dept %}Dept: {{ app.recipient_dept }} | {% endif %}
+                                {% if app.recipient_address %}Address: {{ app.recipient_address }}{% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <p class="mb-1"><strong>Site Location:</strong> {{ app.site }}, {{ app.gewog }}</p>
+                        <p class="mb-1"><strong>Category:</strong> <span class="badge bg-secondary">{{ app.construction_type }}</span></p>
+                        <p class="mb-3"><strong>Purpose:</strong> {{ app.purpose }}</p>
+
+                        {% if app.recommendation %}
+                        <div class="alert alert-light border-start border-4 border-info py-2 my-2">
+                            <small class="fw-bold text-muted">Cultural Officer Recommendation:</small>
+                            <p class="mb-0">{{ app.recommendation }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if app.supervisor_remarks %}
+                        <div class="alert alert-light border-start border-4 border-warning py-2 my-2">
+                            <small class="fw-bold text-muted">Supervisor Remarks:</small>
+                            <p class="mb-0">{{ app.supervisor_remarks }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if active_role == 'Admin' and app.status != 'Approved & Endorsed' %}
+                        <div class="border-top pt-3 mt-3">
+                            <h6 class="fw-bold text-primary">Admin Forward Action</h6>
+                            <form action="/admin-action" method="POST" class="row g-3">
+                                <input type="hidden" name="app_id" value="{{ app.id }}">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold mb-1">Select Supervisor:</label>
+                                    <select class="form-select form-select-sm fw-bold border-primary" name="target_supervisor" required>
+                                        <option value="Dzongdag">Dzongdag (Executive)</option>
+                                        <option value="Dzongrab">Dzongrab (Deputy)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold mb-1">To (Name/Title):</label>
+                                    <input type="text" class="form-control form-control-sm" name="recipient_to" placeholder="e.g. Director General">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold mb-1">Department/Agency:</label>
+                                    <input type="text" class="form-control form-control-sm" name="recipient_dept" placeholder="e.g. Dept of Culture">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold mb-1">Address:</label>
+                                    <input type="text" class="form-control form-control-sm" name="recipient_address" placeholder="e.g. Thimphu">
+                                </div>
+                                <div class="col-md-12">
+                                    <input type="text" class="form-control form-control-sm" name="subject" placeholder="Document Subject Title">
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control form-control-sm" name="recommendation" placeholder="Officer Recommendation">
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">Forward to Selected Supervisor</button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endif %}
+
+                        {% if active_role in ['Dzongdag', 'Dzongrab'] and app.status != 'Approved & Endorsed' %}
+                        <div class="border-top pt-3 mt-3">
+                            <h6 class="fw-bold">Executive Action Panel ({{ active_role }})</h6>
+                            <form action="/supervisor-action" method="POST">
+                                <input type="hidden" name="app_id" value="{{ app.id }}">
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm" name="supervisor_remarks" placeholder="Supervisor Remarks / Endorsement Notes">
+                                </div>
+                                <button type="submit" name="action_type" value="approve_agency" class="btn btn-success btn-sm">Approve & Endorse Clearance</button>
+                                <button type="submit" name="action_type" value="return_admin" class="btn btn-danger btn-sm">Return to Cultural Officer</button>
+                            </form>
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-3">
+                            <a href="/download-signed-package/{{ app.id }}" class="btn btn-danger btn-sm">
+                                <i class="bi bi-file-pdf me-1"></i> Download Clearance PDF Package
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+            </main>
+        </div>
+    </div>
+
+</body>
+</html>
