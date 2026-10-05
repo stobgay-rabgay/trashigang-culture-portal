@@ -90,7 +90,7 @@
                 {% if active_role == 'Admin' %}
                 <div class="card shadow-sm mb-4 border-primary">
                     <div class="card-header bg-primary text-white fw-bold">
-                        <i class="bi bi-pencil-square me-2"></i>Create New Notesheet (Admin Action)
+                        <i class="bi bi-pencil-square me-2"></i>Create & Forward Notesheet
                     </div>
                     <div class="card-body">
                         <form action="/add-notesheet" method="POST">
@@ -104,8 +104,8 @@
                                     <input type="text" name="amount" class="form-control form-control-sm" required placeholder="e.g. 250,000">
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Send to Supervisor:</label>
-                                    <select name="target_supervisor" class="form-select form-select-sm">
+                                    <label class="form-label fw-bold small">Send Directly To:</label>
+                                    <select name="target_supervisor" class="form-select form-select-sm fw-bold border-primary">
                                         <option value="Dzongdag">Dzongdag (Executive)</option>
                                         <option value="Dzongrab">Dzongrab (Deputy)</option>
                                     </select>
@@ -115,7 +115,7 @@
                                     <textarea name="details" class="form-control form-control-sm" rows="3" required placeholder="Describe the purpose and justification..."></textarea>
                                 </div>
                                 <div class="col-md-12 text-end">
-                                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-4">Submit Notesheet</button>
+                                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-4">Submit & Forward Notesheet</button>
                                 </div>
                             </div>
                         </form>
@@ -131,7 +131,7 @@
                             <h5 class="card-title text-danger mb-0">{{ ns.id }}: {{ ns.title }}</h5>
                             <span class="badge {% if 'Approved' in ns.status %}bg-success{% else %}bg-warning text-dark{% endif %} badge-status">{{ ns.status }}</span>
                         </div>
-                        <p class="text-muted small mb-2">Submitted By: {{ ns.submitted_by }} | <strong>Amount: Nu. {{ ns.amount }}</strong></p>
+                        <p class="text-muted small mb-2">Submitted By: {{ ns.submitted_by }} | <strong>Amount: Nu. {{ ns.amount }}</strong> | Assigned To: <span class="badge bg-secondary">{{ ns.assigned_supervisor }}</span></p>
                         <p class="card-text">{{ ns.details }}</p>
 
                         {% if ns.remarks %}
@@ -141,17 +141,26 @@
                         </div>
                         {% endif %}
 
-                        <!-- Executive Action Panel for Notesheet -->
+                        <!-- Executive Review & Forward Action Panel -->
                         {% if active_role in ['Dzongdag', 'Dzongrab'] and not 'Approved' in ns.status %}
                         <div class="border-top pt-3 mt-3">
-                            <h6 class="fw-bold">Executive Action Panel ({{ active_role }})</h6>
-                            <form action="/notesheet-action" method="POST">
+                            <h6 class="fw-bold text-primary">Executive Action & Forward Panel ({{ active_role }})</h6>
+                            <form action="/notesheet-action" method="POST" class="row g-2">
                                 <input type="hidden" name="ns_id" value="{{ ns.id }}">
-                                <div class="mb-2">
-                                    <input type="text" class="form-control form-control-sm" name="remarks" placeholder="Enter Approval / Review Remarks">
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control form-control-sm" name="remarks" placeholder="Enter Review / Endorsement Remarks">
                                 </div>
-                                <button type="submit" name="action_type" value="approve" class="btn btn-success btn-sm">Approve Notesheet</button>
-                                <button type="submit" name="action_type" value="return" class="btn btn-danger btn-sm">Return Notesheet</button>
+                                <div class="col-md-4">
+                                    <select name="forward_to" class="form-select form-select-sm">
+                                        <option value="Dzongdag" {% if ns.assigned_supervisor == 'Dzongrab' %}selected{% endif %}>Forward to Dzongdag</option>
+                                        <option value="Dzongrab" {% if ns.assigned_supervisor == 'Dzongdag' %}selected{% endif %}>Forward to Dzongrab</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12 text-end gap-2 d-flex justify-content-end">
+                                    <button type="submit" name="action_type" value="forward" class="btn btn-outline-primary btn-sm fw-bold"><i class="bi bi-send me-1"></i> Forward Notesheet</button>
+                                    <button type="submit" name="action_type" value="approve" class="btn btn-success btn-sm fw-bold"><i class="bi bi-check-circle me-1"></i> Approve & Sign Notesheet</button>
+                                    <button type="submit" name="action_type" value="return" class="btn btn-danger btn-sm fw-bold">Return</button>
+                                </div>
                             </form>
                         </div>
                         {% endif %}

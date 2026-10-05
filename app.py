@@ -3,9 +3,9 @@ import os
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 app = Flask(__name__)
 app.secret_key = 'bhutan_portal_secret_key'
@@ -36,6 +36,7 @@ notesheets = [
         "submitted_by": "Cultural Officer",
         "details": "Urgent structural reinforcement required before upcoming monsoon.",
         "amount": "250,000",
+        "assigned_supervisor": "Dzongdag",
         "status": "Approved & Endorsed by Dzongdag",
         "remarks": "Approved as requested. Sanction from annual culture fund."
     }
@@ -75,27 +76,33 @@ def add_notesheet():
         "submitted_by": session.get('active_role', 'Admin'),
         "details": details,
         "amount": amount,
-        "status": f"Pending {target_supervisor} Approval",
+        "assigned_supervisor": target_supervisor,
+        "status": f"Pending {target_supervisor} Review",
         "remarks": ""
     })
-    return redirect(url_for('index', view='notesheet', msg=f"Notesheet {notesheet_id} created successfully!"))
+    return redirect(url_for('index', view='notesheet', msg=f"Notesheet {notesheet_id} created & forwarded to {target_supervisor}!"))
 
 @app.route('/notesheet-action', methods=['POST'])
 def notesheet_action():
     ns_id = request.form.get('ns_id')
     action_type = request.form.get('action_type')
-    remarks = request.form.get('remarks')
+    remarks = request.form.get('remarks', '')
+    forward_to = request.form.get('forward_to', '')
     active_role = session.get('active_role', 'Dzongdag')
     
     for ns in notesheets:
         if ns['id'] == ns_id:
-            ns['remarks'] = remarks
+            if remarks:
+                ns['remarks'] = remarks
             if action_type == 'approve':
                 ns['status'] = f'Approved & Endorsed by {active_role}'
+            elif action_type == 'forward':
+                ns['assigned_supervisor'] = forward_to
+                ns['status'] = f'Forwarded to {forward_to} by {active_role}'
             else:
                 ns['status'] = f'Returned by {active_role}'
                 
-    return redirect(url_for('index', view='notesheet', msg="Notesheet action recorded successfully."))
+    return redirect(url_for('index', view='notesheet', msg="Notesheet status updated successfully."))
 
 @app.route('/download-notesheet-pdf/<ns_id>')
 def download_notesheet_pdf(ns_id):
@@ -110,74 +117,35 @@ def download_notesheet_pdf(ns_id):
     styles = getSampleStyleSheet()
     
     title_style = ParagraphStyle(
-        'HeaderTitle',
-        parent=styles['Heading1'],
-        fontName='Helvetica-Bold',
-        fontSize=12,
-        leading=14,
-        alignment=TA_CENTER,
-        textColor=colors.HexColor('#6b1d1d')
+        'HeaderTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=12, leading=14, alignment=TA_CENTER, textColor=colors.HexColor('#6b1d1d')
     )
-    
-    subtitle_style = ParagraphStyle(
-        'HeaderSubtitle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=10,
-        leading=12,
-        alignment=TA_CENTER,
-        textColor=colors.HexColor('#333333')
-    )
-    
     normal_style = ParagraphStyle(
-        'BodyTextCustom',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=10,
-        leading=14,
-        alignment=TA_LEFT
+        'BodyTextCustom', parent=styles['Normal'], fontName='Helvetica', fontSize=10, leading=14, alignment=TA_LEFT
     )
-
     bold_style = ParagraphStyle(
-        'BoldTextCustom',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=10,
-        leading=14
+        'BoldTextCustom', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=10, leading=14
     )
 
     # Dzongkhag Header / Letterhead
-    header_html = """
-    <b>ROYAL GOVERNMENT OF BHUTAN</b><br/>
-    <b>DZONGKHAG ADMINISTRATION: TRASHIGANG</b><br/>
-    <font size=9 color="#555555">CULTURE SECTOR</font>
-    """
+    header_html = "<b>ROYAL GOVERNMENT OF BHUTAN</b><br/><b>DZONGKHAG ADMINISTRATION: TRASHIGANG</b><br/><font size=9 color='#555555'>CULTURE SECTOR</font>"
     story.append(Paragraph(header_html, title_style))
     story.append(Spacer(1, 15))
     
-    # Horizontal Divider
     story.append(Table([['']], colWidths=[540], rowHeights=[2], style=TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#6b1d1d')),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
-        ('TOPPADDING', (0,0), (-1,-1), 0)
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0), ('TOPPADDING', (0,0), (-1,-1), 0)
     ])))
     story.append(Spacer(1, 15))
     
-    # Metadata Row (Ref & Status)
     meta_data = [
         [Paragraph(f"<b>Ref No:</b> {ns['id']}", normal_style), Paragraph(f"<b>Date:</b> October 5, 2026", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))],
         [Paragraph(f"<b>Subject:</b> {ns['title']}", normal_style), Paragraph(f"<b>Status:</b> <font color='green'>{ns['status']}</font>", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))]
     ]
     meta_table = Table(meta_data, colWidths=[300, 240])
-    meta_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-        ('TOPPADDING', (0,0), (-1,-1), 4)
-    ]))
+    meta_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP'), ('BOTTOMPADDING', (0,0), (-1,-1), 4)]))
     story.append(meta_table)
     story.append(Spacer(1, 15))
     
-    # Proposal & Financial Details Table
     story.append(Paragraph("<b><u>FINANCIAL & PURPOSE DETAILS</u></b>", bold_style))
     story.append(Spacer(1, 8))
     
@@ -199,22 +167,18 @@ def download_notesheet_pdf(ns_id):
     details_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f0e6e6')),
         ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#6b1d1d')),
-        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cccccc')),
         ('SPAN', (0,2), (1,2)),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('TOPPADDING', (0,0), (-1,-1), 6), ('BOTTOMPADDING', (0,0), (-1,-1), 6),
     ]))
     story.append(details_table)
     story.append(Spacer(1, 20))
     
-    # Executive Remarks
     if ns.get('remarks'):
-        story.append(Paragraph(f"<b>Approving Authority Remarks:</b> {ns['remarks']}", normal_style))
+        story.append(Paragraph(f"<b>Approving / Review Remarks:</b> {ns['remarks']}", normal_style))
         story.append(Spacer(1, 25))
     
-    # Dual Signatures Block (Both Parties)
     sig_data = [
         [
             Paragraph("<b>Submitted / Initiated By:</b><br/><br/><br/>_______________________<br/><b>Cultural Officer</b><br/>Trashigang Dzongkhag", normal_style),
@@ -222,10 +186,7 @@ def download_notesheet_pdf(ns_id):
         ]
     ]
     sig_table = Table(sig_data, colWidths=[270, 270])
-    sig_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-    ]))
+    sig_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP')]))
     story.append(Spacer(1, 30))
     story.append(sig_table)
     
