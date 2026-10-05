@@ -29,19 +29,50 @@ officials_settings = {
     }
 }
 
+# Work Categories based on Department of Culture Guidelines (June 2022)
+WORK_CATEGORIES = {
+    "New Construction": {
+        "tat": "30 days (1 month)",
+        "path": "PATH A",
+        "approval_authority": "Department of Culture"
+    },
+    "Reconstruction": {
+        "tat": "30 days (1 month)",
+        "path": "PATH A",
+        "approval_authority": "Department of Culture"
+    },
+    "Major Renovation": {
+        "tat": "30 days (1 month)",
+        "path": "PATH A / PATH B",
+        "approval_authority": "Dzongkhag / Department of Culture"
+    },
+    "Minor Renovation": {
+        "tat": "7 days (1 week)",
+        "path": "PATH B",
+        "approval_authority": "Dzongkhag Administration"
+    },
+    "Site Development Work": {
+        "tat": "7 days (1 week)",
+        "path": "PATH B",
+        "approval_authority": "Dzongkhag Administration"
+    }
+}
+
 applications = [
     {
         "id": "104B-TRASHIGANG-2026-001",
         "applicant": "Sonam Chophel",
         "site": "Radhi Pakshaling Lhakhang",
         "gewog": "Radhi Gewog",
-        "construction_type": "Renovation / Restoration",
+        "construction_type": "Renovation (Major)",
         "purpose": "Roofing Structural Timber Replacement & Traditional Wall Painting",
         "status": "Approved & Endorsed by Dzongdag",
         "recommendation": "Recommended for endorsement as per structural assessment report.",
         "supervisor_remarks": "Approved as recommended.",
         "assigned_supervisor": "Dzongdag",
         "approved_by": "Dzongdag",
+        "tat": "30 days (1 month)",
+        "path": "PATH A",
         "type": "construction"
     }
 ]
@@ -67,11 +98,11 @@ def index():
     msg = request.args.get('msg', None)
     
     if view == 'notesheet':
-        return render_template('index.html', active_role=active_role, view=view, msg=msg, notesheets=notesheets, apps=[], settings=officials_settings)
+        return render_template('index.html', active_role=active_role, view=view, msg=msg, notesheets=notesheets, apps=[], settings=officials_settings, work_categories=WORK_CATEGORIES)
     elif view == 'settings':
-        return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=[], notesheets=[], settings=officials_settings)
+        return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=[], notesheets=[], settings=officials_settings, work_categories=WORK_CATEGORIES)
     else:
-        return render_template('index.html', active_role=active_role, view='construction', msg=msg, apps=applications, notesheets=notesheets, settings=officials_settings)
+        return render_template('index.html', active_role=active_role, view='construction', msg=msg, apps=applications, notesheets=notesheets, settings=officials_settings, work_categories=WORK_CATEGORIES)
 
 @app.route('/switch-role')
 def switch_role():
@@ -97,10 +128,15 @@ def apply_construction():
     applicant = request.form.get('applicant')
     site = request.form.get('site')
     gewog = request.form.get('gewog')
-    construction_type = request.form.get('construction_type')
+    construction_type = request.form.get('construction_type', 'New Construction')
     purpose = request.form.get('purpose')
     target_supervisor = request.form.get('target_supervisor', 'Dzongdag')
     
+    category_meta = WORK_CATEGORIES.get(construction_type, {
+        "tat": "30 days (1 month)",
+        "path": "PATH A"
+    })
+
     app_id = f"104B-TRASHIGANG-2026-00{len(applications) + 1}"
     applications.append({
         "id": app_id,
@@ -114,9 +150,11 @@ def apply_construction():
         "supervisor_remarks": "",
         "assigned_supervisor": target_supervisor,
         "approved_by": "",
+        "tat": category_meta['tat'],
+        "path": category_meta['path'],
         "type": "construction"
     })
-    return redirect(url_for('index', view='construction', msg=f"Construction Application {app_id} submitted successfully!"))
+    return redirect(url_for('index', view='construction', msg=f"Heritage Clearances Application {app_id} ({construction_type}) submitted successfully!"))
 
 @app.route('/add-notesheet', methods=['POST'])
 def add_notesheet():
@@ -189,14 +227,14 @@ def download_construction_pdf(app_id):
     
     meta_data = [
         [Paragraph(f"<b>Clearance Ref No:</b> {app_data['id']}", normal_style), Paragraph(f"<b>Date:</b> October 5, 2026", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))],
-        [Paragraph(f"<b>Subject:</b> Cultural Heritage Approval Certificate", normal_style), Paragraph("", normal_style)]
+        [Paragraph(f"<b>Subject:</b> Cultural Heritage Approval Clearance", normal_style), Paragraph("", normal_style)]
     ]
     meta_table = Table(meta_data, colWidths=[300, 240])
     meta_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP'), ('BOTTOMPADDING', (0,0), (-1,-1), 4)]))
     story.append(meta_table)
     story.append(Spacer(1, 15))
     
-    story.append(Paragraph("<b><u>APPLICATION DETAILS</u></b>", bold_style))
+    story.append(Paragraph("<b><u>APPLICATION & WORK CATEGORY DETAILS</u></b>", bold_style))
     story.append(Spacer(1, 8))
     
     table_data = [
@@ -204,7 +242,8 @@ def download_construction_pdf(app_id):
         [Paragraph("Applicant Name", normal_style), Paragraph(app_data['applicant'], normal_style)],
         [Paragraph("Heritage Site", normal_style), Paragraph(app_data['site'], normal_style)],
         [Paragraph("Gewog / Location", normal_style), Paragraph(app_data['gewog'], normal_style)],
-        [Paragraph("Construction Type", normal_style), Paragraph(app_data['construction_type'], normal_style)],
+        [Paragraph("Category of Work", normal_style), Paragraph(app_data['construction_type'], normal_style)],
+        [Paragraph("Turnaround Time (TAT)", normal_style), Paragraph(app_data.get('tat', '30 days'), normal_style)],
         [Paragraph("Scope of Work", normal_style), Paragraph(app_data['purpose'], normal_style)],
     ]
     
