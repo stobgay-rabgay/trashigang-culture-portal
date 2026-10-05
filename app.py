@@ -189,7 +189,7 @@ def download_construction_pdf(app_id):
     
     meta_data = [
         [Paragraph(f"<b>Clearance Ref No:</b> {app_data['id']}", normal_style), Paragraph(f"<b>Date:</b> October 5, 2026", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))],
-        [Paragraph(f"<b>Subject:</b> Cultural Heritage Approval Certificate", normal_style), Paragraph(f"<b>Status:</b> <font color='green'>{app_data['status']}</font>", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))]
+        [Paragraph(f"<b>Subject:</b> Cultural Heritage Approval Certificate", normal_style), Paragraph("", normal_style)]
     ]
     meta_table = Table(meta_data, colWidths=[300, 240])
     meta_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP'), ('BOTTOMPADDING', (0,0), (-1,-1), 4)]))
@@ -275,7 +275,7 @@ def download_notesheet_pdf(ns_id):
     
     meta_data = [
         [Paragraph(f"<b>Ref No:</b> {ns['id']}", normal_style), Paragraph(f"<b>Date:</b> October 5, 2026", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))],
-        [Paragraph(f"<b>Subject:</b> {ns['title']}", normal_style), Paragraph(f"<b>Status:</b> <font color='green'>{ns['status']}</font>", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))]
+        [Paragraph(f"<b>Subject:</b> {ns['title']}", normal_style), Paragraph("", normal_style)]
     ]
     meta_table = Table(meta_data, colWidths=[300, 240])
     meta_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP'), ('BOTTOMPADDING', (0,0), (-1,-1), 4)]))
