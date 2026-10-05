@@ -68,7 +68,7 @@
                     <a class="nav-link {% if view == 'construction' %}active{% endif %}" href="/?view=construction"><i class="bi bi-building me-2"></i>Construction</a>
                     <a class="nav-link {% if view == 'notesheet' %}active{% endif %}" href="/?view=notesheet"><i class="bi bi-file-earmark-text me-2"></i>Notesheet</a>
                     <a class="nav-link {% if view == 'religious' %}active{% endif %}" href="/?view=religious"><i class="bi bi-flower1 me-2"></i>Religious Activities</a>
-                    <a class="nav-link {% if view == 'calendar' %}active{% endif %}" href="/?view=calendar"><i class="bi bi-calendar3 me-2"></i>Event Calendar</a>
+                    <a class="nav-link {% if view == 'settings' %}active{% endif %}" href="/?view=settings"><i class="bi bi-gear-fill me-2"></i>Official Settings</a>
                 </div>
             </nav>
 
@@ -78,6 +78,61 @@
                 <div class="alert alert-info alert-dismissible fade show" role="alert">
                     {{ msg }}
                     <a href="/?view={{ view }}" class="btn-close" aria-label="Close"></a>
+                </div>
+                {% endif %}
+
+                <!-- OFFICIAL MANAGEMENT SETTINGS -->
+                {% if view == 'settings' %}
+                <h2 class="mb-4"><i class="bi bi-sliders me-2"></i>Official Management & Officiating Settings</h2>
+                <div class="card shadow-sm border-secondary col-md-8">
+                    <div class="card-header bg-dark text-white fw-bold">Configure Official Names & Officiating Designations</div>
+                    <div class="card-body">
+                        <form action="/update-settings" method="POST">
+                            <h6 class="fw-bold text-primary mb-3">1. Dasho Dzongdag Details</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-7">
+                                    <label class="form-label small fw-bold">Official Name:</label>
+                                    <input type="text" name="dzongdag_name" class="form-control form-control-sm" value="{{ settings['Dzongdag']['name'] }}">
+                                </div>
+                                <div class="col-md-5 d-flex align-items-end">
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="dzongdag_offtg" id="dzongdagOfftg" {% if settings['Dzongdag']['is_officiating'] %}checked{% endif %}>
+                                        <label class="form-check-label fw-bold small text-danger" for="dzongdagOfftg">Currently Officiating (Offtg. Dasho Dzongdag)</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold text-primary mb-3">2. Dzongrab Details</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-7">
+                                    <label class="form-label small fw-bold">Official Name:</label>
+                                    <input type="text" name="dzongrab_name" class="form-control form-control-sm" value="{{ settings['Dzongrab']['name'] }}">
+                                </div>
+                                <div class="col-md-5 d-flex align-items-end">
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="dzongrab_offtg" id="dzongrabOfftg" {% if settings['Dzongrab']['is_officiating'] %}checked{% endif %}>
+                                        <label class="form-check-label fw-bold small text-danger" for="dzongrabOfftg">Currently Officiating (Offtg. Dzongrab)</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold text-primary mb-3">3. Cultural Officer Details</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-7">
+                                    <label class="form-label small fw-bold">Official Name:</label>
+                                    <input type="text" name="co_name" class="form-control form-control-sm" value="{{ settings['Cultural Officer']['name'] }}">
+                                </div>
+                                <div class="col-md-5 d-flex align-items-end">
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" name="co_offtg" id="coOfftg" {% if settings['Cultural Officer']['is_officiating'] %}checked{% endif %}>
+                                        <label class="form-check-label fw-bold small text-danger" for="coOfftg">Currently Officiating (Offtg. Cultural Officer)</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-sm fw-bold"><i class="bi bi-save me-1"></i> Save Official Settings</button>
+                        </form>
+                    </div>
                 </div>
                 {% endif %}
 
@@ -106,8 +161,12 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold small">Send Directly To:</label>
                                     <select name="target_supervisor" class="form-select form-select-sm fw-bold border-primary">
-                                        <option value="Dzongdag">Dzongdag (Executive)</option>
-                                        <option value="Dzongrab">Dzongrab (Deputy)</option>
+                                        <option value="Dzongdag">
+                                            {% if settings['Dzongdag']['is_officiating'] %}Offtg. {% endif %}Dasho Dzongdag ({{ settings['Dzongdag']['name'] }})
+                                        </option>
+                                        <option value="Dzongrab">
+                                            {% if settings['Dzongrab']['is_officiating'] %}Offtg. {% endif %}Dzongrab ({{ settings['Dzongrab']['name'] }})
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="col-md-12">
@@ -131,7 +190,14 @@
                             <h5 class="card-title text-danger mb-0">{{ ns.id }}: {{ ns.title }}</h5>
                             <span class="badge {% if 'Approved' in ns.status %}bg-success{% else %}bg-warning text-dark{% endif %} badge-status">{{ ns.status }}</span>
                         </div>
-                        <p class="text-muted small mb-2">Submitted By: {{ ns.submitted_by }} | <strong>Amount: Nu. {{ ns.amount }}</strong> | Assigned To: <span class="badge bg-secondary">{{ ns.assigned_supervisor }}</span></p>
+                        <p class="text-muted small mb-2">
+                            Submitted By: {% if settings['Cultural Officer']['is_officiating'] %}Offtg. {% endif %}{{ settings['Cultural Officer']['name'] }} (Cultural Officer) | 
+                            <strong>Amount: Nu. {{ ns.amount }}</strong> | 
+                            Assigned To: <span class="badge bg-secondary">
+                                {% set target = ns.assigned_supervisor %}
+                                {% if settings[target]['is_officiating'] %}Offtg. {% endif %}{{ target }} ({{ settings[target]['name'] }})
+                            </span>
+                        </p>
                         <p class="card-text">{{ ns.details }}</p>
 
                         {% if ns.remarks %}
@@ -152,8 +218,8 @@
                                 </div>
                                 <div class="col-md-4">
                                     <select name="forward_to" class="form-select form-select-sm">
-                                        <option value="Dzongdag" {% if ns.assigned_supervisor == 'Dzongrab' %}selected{% endif %}>Forward to Dzongdag</option>
-                                        <option value="Dzongrab" {% if ns.assigned_supervisor == 'Dzongdag' %}selected{% endif %}>Forward to Dzongrab</option>
+                                        <option value="Dzongdag">Forward to {% if settings['Dzongdag']['is_officiating'] %}Offtg. {% endif %}Dzongdag</option>
+                                        <option value="Dzongrab">Forward to {% if settings['Dzongrab']['is_officiating'] %}Offtg. {% endif %}Dzongrab</option>
                                     </select>
                                 </div>
                                 <div class="col-md-12 text-end gap-2 d-flex justify-content-end">

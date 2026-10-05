@@ -10,6 +10,25 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 app = Flask(__name__)
 app.secret_key = 'bhutan_portal_secret_key'
 
+# Official Settings for Supervisors & Officiating Officers
+officials_settings = {
+    "Cultural Officer": {
+        "name": "Karma Tenzin",
+        "designation": "Cultural Officer",
+        "is_officiating": False
+    },
+    "Dzongdag": {
+        "name": "Dasho Karma Dorji",
+        "designation": "Dzongdag",
+        "is_officiating": False
+    },
+    "Dzongrab": {
+        "name": "Sonam Tobgay",
+        "designation": "Dzongrab",
+        "is_officiating": True
+    }
+}
+
 applications = [
     {
         "id": "104B-TRASHIGANG-2026-001",
@@ -21,10 +40,8 @@ applications = [
         "status": "Approved & Endorsed",
         "recommendation": "Recommended for endorsement as per structural assessment report.",
         "supervisor_remarks": "Approved as recommended.",
-        "recipient_to": "Director General",
-        "recipient_dept": "Department of Culture & Dzongkha Development",
-        "recipient_address": "Thimphu",
         "assigned_supervisor": "Dzongdag",
+        "approved_by": "Dzongdag",
         "type": "construction"
     }
 ]
@@ -37,6 +54,7 @@ notesheets = [
         "details": "Urgent structural reinforcement required before upcoming monsoon.",
         "amount": "250,000",
         "assigned_supervisor": "Dzongdag",
+        "approved_by": "Dzongdag",
         "status": "Approved & Endorsed by Dzongdag",
         "remarks": "Approved as requested. Sanction from annual culture fund."
     }
@@ -49,18 +67,33 @@ def index():
     msg = request.args.get('msg', None)
     
     if view == 'notesheet':
-        return render_template('index.html', active_role=active_role, view=view, msg=msg, notesheets=notesheets, apps=[])
-    elif view.startswith('report_') or view in ['summary_docs', 'inventory']:
-        filtered_apps = [a for a in applications if a.get('type') == view.replace('report_', '') or view == 'summary_docs']
-        return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=filtered_apps, notesheets=notesheets)
+        return render_template('index.html', active_role=active_role, view=view, msg=msg, notesheets=notesheets, apps=[], settings=officials_settings)
+    elif view == 'settings':
+        return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=[], notesheets=[], settings=officials_settings)
     else:
-        return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=applications, notesheets=notesheets)
+        return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=applications, notesheets=notesheets, settings=officials_settings)
 
 @app.route('/switch-role')
 def switch_role():
     role = request.args.get('role', 'Admin')
     session['active_role'] = role
     return redirect(url_for('index', msg=f"Switched mode to {role}"))
+
+@app.route('/update-settings', methods=['POST'])
+def update_settings():
+    # Dzongdag Settings
+    officials_settings["Dzongdag"]["name"] = request.form.get('dzongdag_name', 'Dasho Dzongdag')
+    officials_settings["Dzongdag"]["is_officiating"] = 'dzongdag_offtg' in request.form
+    
+    # Dzongrab Settings
+    officials_settings["Dzongrab"]["name"] = request.form.get('dzongrab_name', 'Dzongrab')
+    officials_settings["Dzongrab"]["is_officiating"] = 'dzongrab_offtg' in request.form
+
+    # Cultural Officer Settings
+    officials_settings["Cultural Officer"]["name"] = request.form.get('co_name', 'Cultural Officer')
+    officials_settings["Cultural Officer"]["is_officiating"] = 'co_offtg' in request.form
+
+    return redirect(url_for('index', view='settings', msg="Official Management & Officiating Settings saved!"))
 
 @app.route('/add-notesheet', methods=['POST'])
 def add_notesheet():
@@ -77,6 +110,7 @@ def add_notesheet():
         "details": details,
         "amount": amount,
         "assigned_supervisor": target_supervisor,
+        "approved_by": "",
         "status": f"Pending {target_supervisor} Review",
         "remarks": ""
     })
@@ -95,6 +129,7 @@ def notesheet_action():
             if remarks:
                 ns['remarks'] = remarks
             if action_type == 'approve':
+                ns['approved_by'] = active_role
                 ns['status'] = f'Approved & Endorsed by {active_role}'
             elif action_type == 'forward':
                 ns['assigned_supervisor'] = forward_to
@@ -179,10 +214,21 @@ def download_notesheet_pdf(ns_id):
         story.append(Paragraph(f"<b>Approving / Review Remarks:</b> {ns['remarks']}", normal_style))
         story.append(Spacer(1, 25))
     
+    # Dynamic Signature Block Generation based on Selected/Approving Supervisor
+    approver_role = ns.get('approved_by') or ns.get('assigned_supervisor', 'Dzongdag')
+    sup_info = officials_settings.get(approver_role, officials_settings['Dzongdag'])
+    co_info = officials_settings.get('Cultural Officer', officials_settings['Cultural Officer'])
+
+    co_offtg_str = "Offtg. " if co_info.get('is_officiating') else ""
+    sup_offtg_str = "Offtg. " if sup_info.get('is_officiating') else ""
+
+    co_title = f"{co_offtg_str}Cultural Officer"
+    sup_title = f"{sup_offtg_str}{'Dasho Dzongdag' if approver_role == 'Dzongdag' else 'Dzongrab'}"
+
     sig_data = [
         [
-            Paragraph("<b>Submitted / Initiated By:</b><br/><br/><br/>_______________________<br/><b>Cultural Officer</b><br/>Trashigang Dzongkhag", normal_style),
-            Paragraph("<b>Approved & Endorsed By:</b><br/><br/><br/>_______________________<br/><b>Dasho Dzongdag / Dzongrab</b><br/>Trashigang Dzongkhag", normal_style)
+            Paragraph(f"<b>Submitted / Initiated By:</b><br/><br/><br/>_______________________<br/><b>({co_info['name']})</b><br/><b>{co_title}</b><br/>Trashigang Dzongkhag", normal_style),
+            Paragraph(f"<b>Approved & Endorsed By:</b><br/><br/><br/>_______________________<br/><b>({sup_info['name']})</b><br/><b>{sup_title}</b><br/>Trashigang Dzongkhag", normal_style)
         ]
     ]
     sig_table = Table(sig_data, colWidths=[270, 270])
