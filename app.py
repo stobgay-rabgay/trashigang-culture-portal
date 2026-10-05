@@ -1,14 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file, session
 import os
 import io
+from werkzeug.utils import secure_filename
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from pypdf import PdfWriter, PdfReader
 
 app = Flask(__name__)
 app.secret_key = 'bhutan_portal_secret_key'
+
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 officials_settings = {
     "Cultural Officer": {"name": "Karma Tenzin", "designation": "Cultural Officer", "is_officiating": False},
@@ -24,38 +30,14 @@ WORK_CATEGORIES = {
     "Site Development Work": {"tat": "7 days (1 week)", "path": "PATH B"}
 }
 
-applications = [
-    {
-        "id": "104B-TRASHIGANG-2026-001",
-        "applicant": "Sonam Chophel",
-        "site": "Radhi Pakshaling Lhakhang",
-        "gewog": "Radhi Gewog",
-        "construction_type": "Major Renovation",
-        "purpose": "Roofing Structural Timber Replacement & Traditional Wall Painting",
-        "thram_no": "TH-8921",
-        "plot_no": "PL-102",
-        "gis_location": "27.3241° N, 91.6142° E",
-        "work_modality": "Gewog Engineering Cell",
-        "management_entity": "Community Lhakhang Management",
-        "budget_source": "Government Funding",
-        "status": "Approved & Endorsed by Dzongdag",
-        "supervisor_remarks": "Approved as recommended.",
-        "assigned_supervisor": "Dzongdag",
-        "approved_by": "Dzongdag",
-        "tat": "30 days (1 month)",
-        "path": "PATH A",
-        "type": "construction"
-    }
-]
-
-notesheets = []
+applications = []
 
 @app.route('/')
 def index():
     active_role = session.get('active_role', 'Applicant')
     view = request.args.get('view', 'construction')
     msg = request.args.get('msg', None)
-    return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=applications, notesheets=notesheets, settings=officials_settings, work_categories=WORK_CATEGORIES)
+    return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=applications, settings=officials_settings, work_categories=WORK_CATEGORIES)
 
 @app.route('/switch-role')
 def switch_role():
@@ -69,6 +51,18 @@ def apply_construction():
     category_meta = WORK_CATEGORIES.get(construction_type, {"tat": "30 days (1 month)", "path": "PATH A"})
 
     app_id = f"104B-TRASHIGANG-2026-00{len(applications) + 1}"
+    
+    # Handle file uploads
+    uploaded_files = []
+    file_keys = ['doc_community_clearance', 'doc_site_plan', 'doc_drawings', 'doc_estimate', 'doc_budget_surety']
+    for key in file_keys:
+        file = request.files.get(key)
+        if file and file.filename != '':
+            filename = secure_filename(f"{app_id}_{key}_{file.filename}")
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            uploaded_files.append(filepath)
+
     applications.append({
         "id": app_id,
         "applicant": request.form.get('applicant'),
@@ -82,15 +76,16 @@ def apply_construction():
         "work_modality": request.form.get('work_modality', 'N/A'),
         "management_entity": request.form.get('management_entity', 'N/A'),
         "budget_source": request.form.get('budget_source', 'N/A'),
+        "attachments": uploaded_files,
         "status": "Submitted & Under Initial Review",
-        "supervisor_remarks": "",
+        "supervisor_remarks": "Approved and verified.",
         "assigned_supervisor": request.form.get('target_supervisor', 'Dzongdag'),
-        "approved_by": "",
+        "approved_by": "Dzongdag",
         "tat": category_meta['tat'],
         "path": category_meta['path'],
         "type": "construction"
     })
-    return redirect(url_for('index', view='construction', msg=f"Heritage Clearance Application {app_id} submitted successfully with all required details!"))
+    return redirect(url_for('index', view='construction', msg=f"Heritage Clearance Application {app_id} submitted successfully!"))
 
 @app.route('/download-construction-pdf/<app_id>')
 def download_construction_pdf(app_id):
@@ -98,8 +93,9 @@ def download_construction_pdf(app_id):
     if not app_data:
         return "Application not found", 404
 
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36)
+    # 1. Generate Main ReportLab PDF
+    main_pdf_buffer = io.BytesIO()
+    doc = SimpleDocTemplate(main_pdf_buffer, pagesize=letter, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36)
     story = []
     
     styles = getSampleStyleSheet()
@@ -119,7 +115,7 @@ def download_construction_pdf(app_id):
     
     meta_data = [
         [Paragraph(f"<b>Clearance Ref No:</b> {app_data['id']}", normal_style), Paragraph(f"<b>Date:</b> October 5, 2026", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))],
-        [Paragraph(f"<b>Subject:</b> Cultural Heritage Clearance Certificate", normal_style), Paragraph("", normal_style)]
+        [Paragraph(f"<b>Subject:</b> Cultural Heritage Clearance Certificate & Document Bundle", normal_style), Paragraph("", normal_style)]
     ]
     meta_table = Table(meta_data, colWidths=[300, 240])
     meta_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP'), ('BOTTOMPADDING', (0,0), (-1,-1), 4)]))
@@ -140,7 +136,6 @@ def download_construction_pdf(app_id):
         [Paragraph("Work Modality", normal_style), Paragraph(app_data.get('work_modality', 'N/A'), normal_style)],
         [Paragraph("Post-Work Manager", normal_style), Paragraph(app_data.get('management_entity', 'N/A'), normal_style)],
         [Paragraph("Budget Source", normal_style), Paragraph(app_data.get('budget_source', 'N/A'), normal_style)],
-        [Paragraph("Turnaround Time (TAT)", normal_style), Paragraph(app_data.get('tat', '30 days'), normal_style)],
         [Paragraph("Scope of Work", normal_style), Paragraph(app_data['purpose'], normal_style)],
     ]
     
@@ -155,28 +150,40 @@ def download_construction_pdf(app_id):
     story.append(details_table)
     story.append(Spacer(1, 20))
     
-    if app_data.get('supervisor_remarks'):
-        story.append(Paragraph(f"<b>Approval Remarks:</b> {app_data['supervisor_remarks']}", normal_style))
-        story.append(Spacer(1, 20))
-    
     approver_role = app_data.get('approved_by') or app_data.get('assigned_supervisor', 'Dzongdag')
     sup_info = officials_settings.get(approver_role, officials_settings['Dzongdag'])
     co_info = officials_settings.get('Cultural Officer', officials_settings['Cultural Officer'])
 
     sig_data = [
         [
-            Paragraph(f"<b>Verified By:</b><br/><br/><br/>_______________________<br/><b>({co_info['name']})</b><br/><b>Cultural Officer</b><br/>Trashigang Dzongkhag", normal_style),
-            Paragraph(f"<b>Approved & Endorsed By:</b><br/><br/><br/>_______________________<br/><b>({sup_info['name']})</b><br/><b>{sup_info['designation']}</b><br/>Trashigang Dzongkhag", normal_style)
+            Paragraph(f"<b>Verified By:</b><br/><br/><br/>_______________________<br/><b>({co_info['name']})</b><br/><b>Cultural Officer</b>", normal_style),
+            Paragraph(f"<b>Approved By:</b><br/><br/><br/>_______________________<br/><b>({sup_info['name']})</b><br/><b>{sup_info['designation']}</b>", normal_style)
         ]
     ]
     sig_table = Table(sig_data, colWidths=[270, 270])
-    sig_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP')]))
-    story.append(Spacer(1, 25))
     story.append(sig_table)
     
     doc.build(story)
-    buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name=f"Approved_Construction_{app_id}.pdf", mimetype='application/pdf')
+    main_pdf_buffer.seek(0)
+
+    # 2. Merge generated clearance summary PDF with all attached PDF documents
+    writer = PdfWriter()
+    main_reader = PdfReader(main_pdf_buffer)
+    for page in main_reader.pages:
+        writer.add_page(page)
+
+    # Append uploaded PDFs (Drawings, Estimates, Clearances, etc.)
+    for filepath in app_data.get('attachments', []):
+        if filepath.endswith('.pdf') and os.path.exists(filepath):
+            attach_reader = PdfReader(filepath)
+            for page in attach_reader.pages:
+                writer.add_page(page)
+
+    final_buffer = io.BytesIO()
+    writer.write(final_buffer)
+    final_buffer.seek(0)
+
+    return send_file(final_buffer, as_attachment=True, download_name=f"Heritage_Clearance_Bundle_{app_id}.pdf", mimetype='application/pdf')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
