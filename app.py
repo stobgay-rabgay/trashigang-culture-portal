@@ -1,6 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file, session
 import os
 import io
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 
 app = Flask(__name__)
 app.secret_key = 'bhutan_portal_secret_key'
@@ -30,8 +35,9 @@ notesheets = [
         "title": "Restoration of Radhi Lhakhang Main Wall",
         "submitted_by": "Cultural Officer",
         "details": "Urgent structural reinforcement required before upcoming monsoon.",
-        "status": "Pending Dzongdag Approval",
-        "remarks": ""
+        "amount": "250,000",
+        "status": "Approved & Endorsed by Dzongdag",
+        "remarks": "Approved as requested. Sanction from annual culture fund."
     }
 ]
 
@@ -59,6 +65,7 @@ def switch_role():
 def add_notesheet():
     title = request.form.get('title')
     details = request.form.get('details')
+    amount = request.form.get('amount', '0.00')
     target_supervisor = request.form.get('target_supervisor', 'Dzongdag')
     
     notesheet_id = f"NS-2026-00{len(notesheets) + 1}"
@@ -67,6 +74,7 @@ def add_notesheet():
         "title": title,
         "submitted_by": session.get('active_role', 'Admin'),
         "details": details,
+        "amount": amount,
         "status": f"Pending {target_supervisor} Approval",
         "remarks": ""
     })
@@ -89,83 +97,141 @@ def notesheet_action():
                 
     return redirect(url_for('index', view='notesheet', msg="Notesheet action recorded successfully."))
 
-@app.route('/admin-action', methods=['POST'])
-def admin_action():
-    app_id = request.form.get('app_id')
-    target_supervisor = request.form.get('target_supervisor', 'Dzongdag')
-    rec_to = request.form.get('recipient_to')
-    rec_dept = request.form.get('recipient_dept')
-    rec_addr = request.form.get('recipient_address')
-    recommendation = request.form.get('recommendation')
-    
-    for app in applications:
-        if app['id'] == app_id:
-            app['assigned_supervisor'] = target_supervisor
-            app['recipient_to'] = rec_to
-            app['recipient_dept'] = rec_dept
-            app['recipient_address'] = rec_addr
-            if recommendation:
-                app['recommendation'] = recommendation
-            app['status'] = f"Forwarded to {target_supervisor}"
-            
-    return redirect(url_for('index', msg=f"Forwarded successfully to {target_supervisor}!"))
-
-@app.route('/supervisor-action', methods=['POST'])
-def supervisor_action():
-    app_id = request.form.get('app_id')
-    action_type = request.form.get('action_type')
-    remarks = request.form.get('supervisor_remarks')
-    
-    for app in applications:
-        if app['id'] == app_id:
-            app['supervisor_remarks'] = remarks
-            if action_type == 'approve_agency':
-                app['status'] = 'Approved & Endorsed'
-            else:
-                app['status'] = 'Returned to Cultural Officer'
-                
-    return redirect(url_for('index', msg="Action recorded successfully."))
-
-@app.route('/download-signed-package/<app_id>')
-def download_package(app_id):
-    content = f"Clearance Package Document for Ref: {app_id}\nStatus: Approved & Endorsed"
-    pdf_data = (
-        b"%PDF-1.4\n"
-        b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
-        b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
-        b"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n"
-        b"4 0 obj\n<< /Length 75 >>\nstream\n"
-        b"BT\n/F1 16 Tf\n50 720 Td\n(TRASHIGANG DZONGKHAG HERITAGE CLEARANCE) Tj\n0 -30 Td\n/F1 12 Tf\n(" + content.encode('ascii', errors='ignore') + b") Tj\nET\n"
-        b"endstream\nendobj\n"
-        b"5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n"
-        b"xref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000060 00000 n \n0000000117 00000 n \n0000000242 00000 n \n0000000366 00000 n \n"
-        b"trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n435\n%%EOF\n"
-    )
-    buffer = io.BytesIO(pdf_data)
-    buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name=f"Clearance_{app_id}.pdf", mimetype='application/pdf')
-
 @app.route('/download-notesheet-pdf/<ns_id>')
 def download_notesheet_pdf(ns_id):
     ns = next((item for item in notesheets if item["id"] == ns_id), None)
-    title = ns["title"] if ns else "Notesheet"
-    content = f"Notesheet Ref: {ns_id}\nSubject: {title}\nStatus: Approved & Endorsed"
+    if not ns:
+        return "Notesheet not found", 404
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36)
+    story = []
     
-    pdf_data = (
-        b"%PDF-1.4\n"
-        b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
-        b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
-        b"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n"
-        b"4 0 obj\n<< /Length 85 >>\nstream\n"
-        b"BT\n/F1 16 Tf\n50 720 Td\n(TRASHIGANG DZONGKHAG APPROVED NOTESHEET) Tj\n0 -30 Td\n/F1 12 Tf\n(" + content.encode('ascii', errors='ignore') + b") Tj\nET\n"
-        b"endstream\nendobj\n"
-        b"5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n"
-        b"xref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000060 00000 n \n0000000117 00000 n \n0000000242 00000 n \n0000000366 00000 n \n"
-        b"trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n445\n%%EOF\n"
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'HeaderTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=12,
+        leading=14,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#6b1d1d')
     )
-    buffer = io.BytesIO(pdf_data)
+    
+    subtitle_style = ParagraphStyle(
+        'HeaderSubtitle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        leading=12,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#333333')
+    )
+    
+    normal_style = ParagraphStyle(
+        'BodyTextCustom',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        leading=14,
+        alignment=TA_LEFT
+    )
+
+    bold_style = ParagraphStyle(
+        'BoldTextCustom',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        leading=14
+    )
+
+    # Dzongkhag Header / Letterhead
+    header_html = """
+    <b>ROYAL GOVERNMENT OF BHUTAN</b><br/>
+    <b>DZONGKHAG ADMINISTRATION: TRASHIGANG</b><br/>
+    <font size=9 color="#555555">CULTURE SECTOR</font>
+    """
+    story.append(Paragraph(header_html, title_style))
+    story.append(Spacer(1, 15))
+    
+    # Horizontal Divider
+    story.append(Table([['']], colWidths=[540], rowHeights=[2], style=TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#6b1d1d')),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING', (0,0), (-1,-1), 0)
+    ])))
+    story.append(Spacer(1, 15))
+    
+    # Metadata Row (Ref & Status)
+    meta_data = [
+        [Paragraph(f"<b>Ref No:</b> {ns['id']}", normal_style), Paragraph(f"<b>Date:</b> October 5, 2026", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))],
+        [Paragraph(f"<b>Subject:</b> {ns['title']}", normal_style), Paragraph(f"<b>Status:</b> <font color='green'>{ns['status']}</font>", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))]
+    ]
+    meta_table = Table(meta_data, colWidths=[300, 240])
+    meta_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('TOPPADDING', (0,0), (-1,-1), 4)
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 15))
+    
+    # Proposal & Financial Details Table
+    story.append(Paragraph("<b><u>FINANCIAL & PURPOSE DETAILS</u></b>", bold_style))
+    story.append(Spacer(1, 8))
+    
+    table_data = [
+        [Paragraph("<b>Sl. No.</b>", bold_style), Paragraph("<b>Purpose / Description of Proposal</b>", bold_style), Paragraph("<b>Estimated Amount (Nu.)</b>", ParagraphStyle('CenterBold', parent=bold_style, alignment=TA_CENTER))],
+        [
+            Paragraph("1", normal_style),
+            Paragraph(f"<b>{ns['title']}</b><br/>{ns['details']}", normal_style),
+            Paragraph(f"Nu. {ns.get('amount', '0.00')}/-", ParagraphStyle('CenterText', parent=normal_style, alignment=TA_CENTER))
+        ],
+        [
+            Paragraph("<b>TOTAL AMOUNT SANCTIONED</b>", bold_style),
+            Paragraph("", normal_style),
+            Paragraph(f"<b>Nu. {ns.get('amount', '0.00')}/-</b>", ParagraphStyle('CenterBold', parent=bold_style, alignment=TA_CENTER))
+        ]
+    ]
+    
+    details_table = Table(table_data, colWidths=[50, 340, 150])
+    details_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f0e6e6')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#6b1d1d')),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cccccc')),
+        ('SPAN', (0,2), (1,2)),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    story.append(details_table)
+    story.append(Spacer(1, 20))
+    
+    # Executive Remarks
+    if ns.get('remarks'):
+        story.append(Paragraph(f"<b>Approving Authority Remarks:</b> {ns['remarks']}", normal_style))
+        story.append(Spacer(1, 25))
+    
+    # Dual Signatures Block (Both Parties)
+    sig_data = [
+        [
+            Paragraph("<b>Submitted / Initiated By:</b><br/><br/><br/>_______________________<br/><b>Cultural Officer</b><br/>Trashigang Dzongkhag", normal_style),
+            Paragraph("<b>Approved & Endorsed By:</b><br/><br/><br/>_______________________<br/><b>Dasho Dzongdag / Dzongrab</b><br/>Trashigang Dzongkhag", normal_style)
+        ]
+    ]
+    sig_table = Table(sig_data, colWidths=[270, 270])
+    sig_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+    ]))
+    story.append(Spacer(1, 30))
+    story.append(sig_table)
+    
+    doc.build(story)
     buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name=f"Notesheet_{ns_id}.pdf", mimetype='application/pdf')
+    return send_file(buffer, as_attachment=True, download_name=f"Approved_Notesheet_{ns_id}.pdf", mimetype='application/pdf')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
