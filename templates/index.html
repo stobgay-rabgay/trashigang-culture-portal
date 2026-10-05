@@ -33,215 +33,240 @@
             </nav>
         </div>
 
+        <!-- Sidebar Footer Role Switcher -->
         <div class="border-t border-stone-700 pt-4">
             <p class="text-xs text-stone-400 mb-2">Active Mode: <b class="text-amber-400">{{ active_role }}</b></p>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-                <a href="/switch-role?role=Applicant" class="bg-stone-800 hover:bg-stone-700 text-center py-2 rounded">Applicant</a>
-                <a href="/switch-role?role=Dzongdag" class="bg-stone-800 hover:bg-stone-700 text-center py-2 rounded">Dzongdag</a>
+            <div class="grid grid-cols-2 gap-1.5 text-xs">
+                <a href="/switch-role?role=Applicant" class="bg-stone-800 hover:bg-stone-700 text-center py-1.5 rounded border border-stone-600">Applicant</a>
+                <a href="/switch-role?role=Dzongrab" class="bg-stone-800 hover:bg-stone-700 text-center py-1.5 rounded border border-stone-600">Dzongrab</a>
+                <a href="/switch-role?role=Dzongdag" class="bg-stone-800 hover:bg-stone-700 text-center py-1.5 rounded border border-stone-600">Dzongdag</a>
+                <a href="/switch-role?role=Admin" class="bg-stone-800 hover:bg-stone-700 text-center py-1.5 rounded border border-stone-600">Admin</a>
             </div>
         </div>
     </div>
 
     <!-- Main Content Area -->
-    <div class="flex-1 overflow-y-auto p-8">
-        {% if msg %}
-        <div class="mb-6 bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded relative">
-            <span>{{ msg }}</span>
-        </div>
-        {% endif %}
-
-        {% if view == 'construction' %}
-        <div class="max-w-5xl mx-auto space-y-8">
-            <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Cultural Heritage Construction & Clearance Application</h1>
-
-            <!-- Heritage Application Form -->
-            <div class="bg-white rounded-lg shadow-md border border-stone-200 overflow-hidden">
-                <div class="bg-red-800 text-white px-6 py-4 font-bold flex items-center space-x-2">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    <span>New Heritage Clearance Application Form</span>
-                </div>
-
-                <form action="/apply-construction" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
-                    
-                    <!-- Basic Information -->
-                    <div class="border-b border-gray-200 pb-4">
-                        <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-id-card text-red-800"></i> 1. Basic Application Details
-                        </h2>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Applicant / Focal Representative Name *</label>
-                                <input type="text" name="applicant" required placeholder="e.g. Sonam Chophel" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Gewog / Location *</label>
-                                <input type="text" name="gewog" required placeholder="e.g. Radhi Gewog" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Heritage Site Name (Lhakhang/Chorten/Site) *</label>
-                                <input type="text" name="site" required placeholder="e.g. Radhi Pakshaling Lhakhang" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Category of Construction / Work *</label>
-                                <select name="construction_type" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none bg-white">
-                                    <option value="New Construction">I. New Construction (30 Days TAT - Path A)</option>
-                                    <option value="Reconstruction">II. Reconstruction (30 Days TAT - Path A)</option>
-                                    <option value="Major Renovation">III. Renovation (Major) (30 Days TAT - Path A/B)</option>
-                                    <option value="Minor Renovation">III. Renovation (Minor) (7 Days TAT - Path B)</option>
-                                    <option value="Site Development Work">IV. Site Development Works (7 Days TAT - Path B)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Land & Location Details -->
-                    <div class="border-b border-gray-200 pb-4">
-                        <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-map-location-dot text-red-800"></i> 2. Land & Location Identification
-                        </h2>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Thram Number *</label>
-                                <input type="text" name="thram_no" required placeholder="e.g. TH-8921" class="w-full border border-gray-300 rounded p-2 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Plot Number *</label>
-                                <input type="text" name="plot_no" required placeholder="e.g. PL-102" class="w-full border border-gray-300 rounded p-2 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">GIS / GPS Coordinates *</label>
-                                <input type="text" name="gis_location" required placeholder="e.g. 27.3241° N, 91.6142° E" class="w-full border border-gray-300 rounded p-2 text-sm">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Implementation & Funding -->
-                    <div class="border-b border-gray-200 pb-4">
-                        <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-users-gear text-red-800"></i> 3. Work Modality & Financial Source
-                        </h2>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Work Modality / Execution Coordinator *</label>
-                                <input type="text" name="work_modality" required placeholder="e.g. Local Gewog Committee / Direct Department Execution" class="w-full border border-gray-300 rounded p-2 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Post-Completion Management Entity *</label>
-                                <input type="text" name="management_entity" required placeholder="e.g. Community Lhakhang Management / Zhung Dratshang" class="w-full border border-gray-300 rounded p-2 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Source of Budget *</label>
-                                <select name="budget_source" class="w-full border border-gray-300 rounded p-2 text-sm bg-white">
-                                    <option value="Government Funding">Government Funding (5-Year Plan / Annual Culture Fund)</option>
-                                    <option value="Private Funding">Private Funding / Sponsor Donation</option>
-                                    <option value="Community Donation">Community Contribution</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1">Target Forwarding Official *</label>
-                                <select name="target_supervisor" class="w-full border border-gray-300 rounded p-2 text-sm bg-white">
-                                    <option value="Dzongdag">Dasho Dzongdag</option>
-                                    <option value="Dzongrab">Dzongrab</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Scope & Proposal Justification -->
-                    <div class="border-b border-gray-200 pb-4">
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Detailed Proposal & Need Assessment Justification *</label>
-                        <textarea name="purpose" rows="3" required placeholder="Describe details of proposed activity, need assessment, wall painting, or structural timber replacement..." class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none"></textarea>
-                    </div>
-
-                    <!-- Mandatory Document Attachments -->
-                    <div>
-                        <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-file-arrow-up text-red-800"></i> 4. Required Attachments & Checklist
-                        </h2>
-                        <div class="grid grid-cols-2 gap-4 bg-stone-50 p-4 rounded border border-stone-200 text-xs">
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">1. Community Clearance (Gewog Endorsed) *</label>
-                                <input type="file" name="doc_community_clearance" class="w-full bg-white border border-gray-300 rounded p-1">
-                            </div>
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">2. Site Plan & Location Image *</label>
-                                <input type="file" name="doc_site_plan" class="w-full bg-white border border-gray-300 rounded p-1">
-                            </div>
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">3. Drawings (Architectural/Structural) *</label>
-                                <input type="file" name="doc_drawings" class="w-full bg-white border border-gray-300 rounded p-1">
-                            </div>
-                            <div>
-                                <label class="block font-semibold text-gray-700 mb-1">4. Cost Estimate / BoQ *</label>
-                                <input type="file" name="doc_estimate" class="w-full bg-white border border-gray-300 rounded p-1">
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block font-semibold text-gray-700 mb-1">5. Letter of Surety / Budget Assurance (for Private Funding)</label>
-                                <input type="file" name="doc_budget_surety" class="w-full bg-white border border-gray-300 rounded p-1">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-right">
-                        <button type="submit" class="bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 px-6 rounded shadow transition duration-200">
-                            Submit Heritage Application
-                        </button>
-                    </div>
-                </form>
+    <div class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Top Navbar with All Role Switch Options -->
+        <header class="bg-white border-b border-gray-200 px-8 py-3 flex justify-between items-center flex-shrink-0">
+            <div class="text-xs text-gray-500 font-medium">
+                Royal Government of Bhutan | Dzongkhag Administration Trashigang
             </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-600">Switch Mode:</span>
+                <div class="inline-flex rounded-md shadow-sm text-xs" role="group">
+                    <a href="/switch-role?role=Applicant" class="px-3 py-1.5 font-bold rounded-l-lg border border-gray-300 {% if active_role == 'Applicant' %}bg-amber-700 text-white border-amber-700{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %}">
+                        Applicant
+                    </a>
+                    <a href="/switch-role?role=Dzongrab" class="px-3 py-1.5 font-bold border-t border-b border-r border-gray-300 {% if active_role == 'Dzongrab' %}bg-amber-800 text-white border-amber-800{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %}">
+                        Dzongrab
+                    </a>
+                    <a href="/switch-role?role=Dzongdag" class="px-3 py-1.5 font-bold border-t border-b border-r border-gray-300 {% if active_role == 'Dzongdag' %}bg-red-800 text-white border-red-800{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %}">
+                        Dzongdag
+                    </a>
+                    <a href="/switch-role?role=Admin" class="px-3 py-1.5 font-bold rounded-r-lg border-t border-b border-r border-gray-300 {% if active_role == 'Admin' %}bg-stone-800 text-white border-stone-800{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %}">
+                        Admin
+                    </a>
+                </div>
+            </div>
+        </header>
 
-            <!-- List of Submitted Applications -->
-            <div class="space-y-4">
-                <h2 class="text-xl font-bold text-stone-900">Submitted Applications</h2>
-                
-                {% for app in apps %}
-                <div class="bg-white rounded-lg border border-stone-200 p-6 shadow-sm space-y-3">
-                    <div class="flex justify-between items-start">
+        <div class="flex-1 overflow-y-auto p-8">
+            {% if msg %}
+            <div class="mb-6 bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded relative text-sm font-medium">
+                <span>{{ msg }}</span>
+            </div>
+            {% endif %}
+
+            {% if view == 'construction' %}
+            <div class="max-w-5xl mx-auto space-y-8">
+                <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Cultural Heritage Construction & Clearance Application</h1>
+
+                <!-- Heritage Application Form -->
+                <div class="bg-white rounded-lg shadow-md border border-stone-200 overflow-hidden">
+                    <div class="bg-red-800 text-white px-6 py-4 font-bold flex items-center space-x-2">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>New Heritage Clearance Application Form</span>
+                    </div>
+
+                    <form action="/apply-construction" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+                        
+                        <!-- Basic Information -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-id-card text-red-800"></i> 1. Basic Application Details
+                            </h2>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Applicant / Focal Representative Name *</label>
+                                    <input type="text" name="applicant" required placeholder="e.g. Sonam Chophel" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Gewog / Location *</label>
+                                    <input type="text" name="gewog" required placeholder="e.g. Radhi Gewog" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Heritage Site Name (Lhakhang/Chorten/Site) *</label>
+                                    <input type="text" name="site" required placeholder="e.g. Radhi Pakshaling Lhakhang" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Category of Construction / Work *</label>
+                                    <select name="construction_type" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none bg-white">
+                                        <option value="New Construction">I. New Construction (30 Days TAT - Path A)</option>
+                                        <option value="Reconstruction">II. Reconstruction (30 Days TAT - Path A)</option>
+                                        <option value="Major Renovation">III. Renovation (Major) (30 Days TAT - Path A/B)</option>
+                                        <option value="Minor Renovation">III. Renovation (Minor) (7 Days TAT - Path B)</option>
+                                        <option value="Site Development Work">IV. Site Development Works (7 Days TAT - Path B)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Land & Location Details -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-red-800"></i> 2. Land & Location Identification
+                            </h2>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Thram Number *</label>
+                                    <input type="text" name="thram_no" required placeholder="e.g. TH-8921" class="w-full border border-gray-300 rounded p-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Plot Number *</label>
+                                    <input type="text" name="plot_no" required placeholder="e.g. PL-102" class="w-full border border-gray-300 rounded p-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">GIS / GPS Coordinates *</label>
+                                    <input type="text" name="gis_location" required placeholder="e.g. 27.3241° N, 91.6142° E" class="w-full border border-gray-300 rounded p-2 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Implementation & Funding -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-users-gear text-red-800"></i> 3. Work Modality & Financial Source
+                            </h2>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Work Modality / Execution Coordinator *</label>
+                                    <input type="text" name="work_modality" required placeholder="e.g. Local Gewog Committee / Direct Department Execution" class="w-full border border-gray-300 rounded p-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Post-Completion Management Entity *</label>
+                                    <input type="text" name="management_entity" required placeholder="e.g. Community Lhakhang Management / Zhung Dratshang" class="w-full border border-gray-300 rounded p-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Source of Budget *</label>
+                                    <select name="budget_source" class="w-full border border-gray-300 rounded p-2 text-sm bg-white">
+                                        <option value="Government Funding">Government Funding (5-Year Plan / Annual Culture Fund)</option>
+                                        <option value="Private Funding">Private Funding / Sponsor Donation</option>
+                                        <option value="Community Donation">Community Contribution</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 mb-1">Target Forwarding Official *</label>
+                                    <select name="target_supervisor" class="w-full border border-gray-300 rounded p-2 text-sm bg-white">
+                                        <option value="Dzongdag">Dasho Dzongdag</option>
+                                        <option value="Dzongrab">Dzongrab</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scope & Proposal Justification -->
+                        <div class="border-b border-gray-200 pb-4">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Detailed Proposal & Need Assessment Justification *</label>
+                            <textarea name="purpose" rows="3" required placeholder="Describe details of proposed activity, need assessment, wall painting, or structural timber replacement..." class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none"></textarea>
+                        </div>
+
+                        <!-- Mandatory Document Attachments -->
                         <div>
-                            <span class="text-red-800 font-bold text-lg">{{ app.id }}</span>: 
-                            <span class="font-bold text-lg text-gray-800">{{ app.site }}</span>
+                            <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-file-arrow-up text-red-800"></i> 4. Required Attachments & Checklist
+                            </h2>
+                            <div class="grid grid-cols-2 gap-4 bg-stone-50 p-4 rounded border border-stone-200 text-xs">
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-1">1. Community Clearance (Gewog Endorsed) *</label>
+                                    <input type="file" name="doc_community_clearance" class="w-full bg-white border border-gray-300 rounded p-1">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-1">2. Site Plan & Location Image *</label>
+                                    <input type="file" name="doc_site_plan" class="w-full bg-white border border-gray-300 rounded p-1">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-1">3. Drawings (Architectural/Structural) *</label>
+                                    <input type="file" name="doc_drawings" class="w-full bg-white border border-gray-300 rounded p-1">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-1">4. Cost Estimate / BoQ *</label>
+                                    <input type="file" name="doc_estimate" class="w-full bg-white border border-gray-300 rounded p-1">
+                                </div>
+                            </div>
                         </div>
-                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-300">
-                            {{ app.status }}
-                        </span>
-                    </div>
 
-                    <div class="grid grid-cols-3 gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded">
-                        <p><b>Applicant:</b> {{ app.applicant }}</p>
-                        <p><b>Gewog:</b> {{ app.gewog }}</p>
-                        <p><b>Category:</b> {{ app.construction_type }}</p>
-                        <p><b>Thram / Plot:</b> {{ app.thram_no }} / {{ app.plot_no }}</p>
-                        <p><b>Modality:</b> {{ app.work_modality }}</p>
-                        <p><b>Budget:</b> {{ app.budget_source }}</p>
-                    </div>
-
-                    <p class="text-sm text-gray-700"><b>Purpose & Scope:</b> {{ app.purpose }}</p>
-
-                    {% if app.supervisor_remarks %}
-                    <div class="bg-green-50 border-l-4 border-green-600 p-3 text-xs text-green-900">
-                        <b>Supervisor Remarks:</b> {{ app.supervisor_remarks }}
-                    </div>
-                    {% endif %}
-
-                    <div>
-                        <a href="/download-construction-pdf/{{ app.id }}" class="inline-flex items-center gap-2 bg-red-800 hover:bg-red-900 text-white text-xs font-bold py-2 px-4 rounded">
-                            <i class="fa-solid fa-file-pdf"></i> Download Approved Clearance PDF
-                        </a>
-                    </div>
+                        <div class="text-right">
+                            <button type="submit" class="bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 px-6 rounded shadow transition duration-200">
+                                Submit Heritage Application
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                {% endfor %}
+
+                <!-- List of Submitted Applications -->
+                <div class="space-y-4">
+                    <h2 class="text-xl font-bold text-stone-900">Submitted Applications</h2>
+                    
+                    {% for app in apps %}
+                    <div class="bg-white rounded-lg border border-stone-200 p-6 shadow-sm space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-red-800 font-bold text-lg">{{ app.id }}</span>: 
+                                <span class="font-bold text-lg text-gray-800">{{ app.site }}</span>
+                            </div>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-300">
+                                {{ app.status }}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded">
+                            <p><b>Applicant:</b> {{ app.applicant }}</p>
+                            <p><b>Gewog:</b> {{ app.gewog }}</p>
+                            <p><b>Category:</b> {{ app.construction_type }}</p>
+                            <p><b>Thram / Plot:</b> {{ app.thram_no }} / {{ app.plot_no }}</p>
+                            <p><b>Modality:</b> {{ app.work_modality }}</p>
+                            <p><b>Budget:</b> {{ app.budget_source }}</p>
+                        </div>
+
+                        <p class="text-sm text-gray-700"><b>Purpose & Scope:</b> {{ app.purpose }}</p>
+
+                        {% if app.supervisor_remarks %}
+                        <div class="bg-green-50 border-l-4 border-green-600 p-3 text-xs text-green-900">
+                            <b>Supervisor Remarks:</b> {{ app.supervisor_remarks }}
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <a href="/download-construction-pdf/{{ app.id }}" class="inline-flex items-center gap-2 bg-red-800 hover:bg-red-900 text-white text-xs font-bold py-2 px-4 rounded">
+                                <i class="fa-solid fa-file-pdf"></i> Download Approved Clearance PDF
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
+            {% elif view == 'notesheet' %}
+            <div class="max-w-4xl mx-auto space-y-6">
+                <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Official Culture Notesheets</h1>
+            </div>
+            {% elif view == 'settings' %}
+            <div class="max-w-3xl mx-auto space-y-6">
+                <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Official Designations & Officiating Settings</h1>
+            </div>
+            {% endif %}
         </div>
-        {% elif view == 'notesheet' %}
-        <div class="max-w-4xl mx-auto space-y-6">
-            <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Official Culture Notesheets</h1>
-            <!-- Notesheet content -->
-        </div>
-        {% elif view == 'settings' %}
-        <div class="max-w-3xl mx-auto space-y-6">
-            <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Official Designations & Officiating Settings</h1>
-        </div>
-        {% endif %}
     </div>
 
 </body>
