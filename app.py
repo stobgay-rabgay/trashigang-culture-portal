@@ -35,9 +35,9 @@ applications = [
         "applicant": "Sonam Chophel",
         "site": "Radhi Pakshaling Lhakhang",
         "gewog": "Radhi Gewog",
-        "construction_type": "Construction",
+        "construction_type": "Renovation / Restoration",
         "purpose": "Roofing Structural Timber Replacement & Traditional Wall Painting",
-        "status": "Approved & Endorsed",
+        "status": "Approved & Endorsed by Dzongdag",
         "recommendation": "Recommended for endorsement as per structural assessment report.",
         "supervisor_remarks": "Approved as recommended.",
         "assigned_supervisor": "Dzongdag",
@@ -62,7 +62,7 @@ notesheets = [
 
 @app.route('/')
 def index():
-    active_role = session.get('active_role', 'Admin')
+    active_role = session.get('active_role', 'Applicant')
     view = request.args.get('view', 'construction')
     msg = request.args.get('msg', None)
     
@@ -71,29 +71,52 @@ def index():
     elif view == 'settings':
         return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=[], notesheets=[], settings=officials_settings)
     else:
-        return render_template('index.html', active_role=active_role, view=view, msg=msg, apps=applications, notesheets=notesheets, settings=officials_settings)
+        return render_template('index.html', active_role=active_role, view='construction', msg=msg, apps=applications, notesheets=notesheets, settings=officials_settings)
 
 @app.route('/switch-role')
 def switch_role():
-    role = request.args.get('role', 'Admin')
+    role = request.args.get('role', 'Applicant')
     session['active_role'] = role
     return redirect(url_for('index', msg=f"Switched mode to {role}"))
 
 @app.route('/update-settings', methods=['POST'])
 def update_settings():
-    # Dzongdag Settings
     officials_settings["Dzongdag"]["name"] = request.form.get('dzongdag_name', 'Dasho Dzongdag')
     officials_settings["Dzongdag"]["is_officiating"] = 'dzongdag_offtg' in request.form
     
-    # Dzongrab Settings
     officials_settings["Dzongrab"]["name"] = request.form.get('dzongrab_name', 'Dzongrab')
     officials_settings["Dzongrab"]["is_officiating"] = 'dzongrab_offtg' in request.form
 
-    # Cultural Officer Settings
     officials_settings["Cultural Officer"]["name"] = request.form.get('co_name', 'Cultural Officer')
     officials_settings["Cultural Officer"]["is_officiating"] = 'co_offtg' in request.form
 
-    return redirect(url_for('index', view='settings', msg="Official Management & Officiating Settings saved!"))
+    return redirect(url_for('index', view='settings', msg="Official Settings saved!"))
+
+@app.route('/apply-construction', methods=['POST'])
+def apply_construction():
+    applicant = request.form.get('applicant')
+    site = request.form.get('site')
+    gewog = request.form.get('gewog')
+    construction_type = request.form.get('construction_type')
+    purpose = request.form.get('purpose')
+    target_supervisor = request.form.get('target_supervisor', 'Dzongdag')
+    
+    app_id = f"104B-TRASHIGANG-2026-00{len(applications) + 1}"
+    applications.append({
+        "id": app_id,
+        "applicant": applicant,
+        "site": site,
+        "gewog": gewog,
+        "construction_type": construction_type,
+        "purpose": purpose,
+        "status": "Submitted & Under Initial Review",
+        "recommendation": "",
+        "supervisor_remarks": "",
+        "assigned_supervisor": target_supervisor,
+        "approved_by": "",
+        "type": "construction"
+    })
+    return redirect(url_for('index', view='construction', msg=f"Construction Application {app_id} submitted successfully!"))
 
 @app.route('/add-notesheet', methods=['POST'])
 def add_notesheet():
@@ -150,18 +173,10 @@ def download_notesheet_pdf(ns_id):
     story = []
     
     styles = getSampleStyleSheet()
-    
-    title_style = ParagraphStyle(
-        'HeaderTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=12, leading=14, alignment=TA_CENTER, textColor=colors.HexColor('#6b1d1d')
-    )
-    normal_style = ParagraphStyle(
-        'BodyTextCustom', parent=styles['Normal'], fontName='Helvetica', fontSize=10, leading=14, alignment=TA_LEFT
-    )
-    bold_style = ParagraphStyle(
-        'BoldTextCustom', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=10, leading=14
-    )
+    title_style = ParagraphStyle('HeaderTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=12, leading=14, alignment=TA_CENTER, textColor=colors.HexColor('#6b1d1d'))
+    normal_style = ParagraphStyle('BodyTextCustom', parent=styles['Normal'], fontName='Helvetica', fontSize=10, leading=14, alignment=TA_LEFT)
+    bold_style = ParagraphStyle('BoldTextCustom', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=10, leading=14)
 
-    # Dzongkhag Header / Letterhead
     header_html = "<b>ROYAL GOVERNMENT OF BHUTAN</b><br/><b>DZONGKHAG ADMINISTRATION: TRASHIGANG</b><br/><font size=9 color='#555555'>CULTURE SECTOR</font>"
     story.append(Paragraph(header_html, title_style))
     story.append(Spacer(1, 15))
@@ -214,7 +229,6 @@ def download_notesheet_pdf(ns_id):
         story.append(Paragraph(f"<b>Approving / Review Remarks:</b> {ns['remarks']}", normal_style))
         story.append(Spacer(1, 25))
     
-    # Dynamic Signature Block Generation based on Selected/Approving Supervisor
     approver_role = ns.get('approved_by') or ns.get('assigned_supervisor', 'Dzongdag')
     sup_info = officials_settings.get(approver_role, officials_settings['Dzongdag'])
     co_info = officials_settings.get('Cultural Officer', officials_settings['Cultural Officer'])

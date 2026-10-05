@@ -67,7 +67,6 @@
                 <div class="nav flex-column">
                     <a class="nav-link {% if view == 'construction' %}active{% endif %}" href="/?view=construction"><i class="bi bi-building me-2"></i>Construction</a>
                     <a class="nav-link {% if view == 'notesheet' %}active{% endif %}" href="/?view=notesheet"><i class="bi bi-file-earmark-text me-2"></i>Notesheet</a>
-                    <a class="nav-link {% if view == 'religious' %}active{% endif %}" href="/?view=religious"><i class="bi bi-flower1 me-2"></i>Religious Activities</a>
                     <a class="nav-link {% if view == 'settings' %}active{% endif %}" href="/?view=settings"><i class="bi bi-gear-fill me-2"></i>Official Settings</a>
                 </div>
             </nav>
@@ -79,6 +78,75 @@
                     {{ msg }}
                     <a href="/?view={{ view }}" class="btn-close" aria-label="Close"></a>
                 </div>
+                {% endif %}
+
+                <!-- CONSTRUCTION SECTION -->
+                {% if view == 'construction' %}
+                <h2 class="mb-4">Cultural Heritage Construction & Renovation Application</h2>
+
+                {% if active_role == 'Applicant' %}
+                <div class="card shadow-sm mb-4 border-danger">
+                    <div class="card-header bg-danger text-white fw-bold">
+                        <i class="bi bi-file-earmark-plus me-2"></i>New Heritage Construction Application Form
+                    </div>
+                    <div class="card-body">
+                        <form action="/apply-construction" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Applicant Name / Representative:</label>
+                                    <input type="text" name="applicant" class="form-control form-control-sm" required placeholder="e.g. Sonam Chophel">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Gewog / Location:</label>
+                                    <input type="text" name="gewog" class="form-control form-control-sm" required placeholder="e.g. Radhi Gewog">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Heritage Site Name (Lhakhang/Chorten):</label>
+                                    <input type="text" name="site" class="form-control form-control-sm" required placeholder="e.g. Radhi Pakshaling Lhakhang">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small">Type of Work:</label>
+                                    <select name="construction_type" class="form-select form-select-sm">
+                                        <option value="New Construction">New Construction</option>
+                                        <option value="Renovation / Restoration">Renovation / Restoration</option>
+                                        <option value="Expansion / Structural Change">Expansion / Structural Change</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold small">Detailed Proposal & Justification:</label>
+                                    <textarea name="purpose" class="form-control form-control-sm" rows="3" required placeholder="Describe details of work, timber requirement, wall painting, or structural changes..."></textarea>
+                                </div>
+                                <div class="col-md-12 text-end">
+                                    <button type="submit" class="btn btn-danger btn-sm fw-bold px-4">Submit Application</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+                <h5 class="fw-bold mb-3">Submitted Applications</h5>
+                {% for app in apps %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title text-danger mb-0">{{ app.id }}: {{ app.site }}</h5>
+                            <span class="badge {% if 'Approved' in app.status %}bg-success{% else %}bg-warning text-dark{% endif %} badge-status">{{ app.status }}</span>
+                        </div>
+                        <p class="text-muted small mb-2">
+                            Applicant: <strong>{{ app.applicant }}</strong> | Gewog: {{ app.gewog }} | Type: <strong>{{ app.construction_type }}</strong>
+                        </p>
+                        <p class="card-text"><strong>Purpose:</strong> {{ app.purpose }}</p>
+
+                        {% if app.supervisor_remarks %}
+                        <div class="alert alert-light border-start border-4 border-success py-2 my-2">
+                            <small class="fw-bold text-muted">Supervisor Remarks:</small>
+                            <p class="mb-0">{{ app.supervisor_remarks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
                 {% endif %}
 
                 <!-- OFFICIAL MANAGEMENT SETTINGS -->
