@@ -162,6 +162,92 @@ def notesheet_action():
                 
     return redirect(url_for('index', view='notesheet', msg="Notesheet status updated successfully."))
 
+@app.route('/download-construction-pdf/<app_id>')
+def download_construction_pdf(app_id):
+    app_data = next((item for item in applications if item["id"] == app_id), None)
+    if not app_data:
+        return "Application not found", 404
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36)
+    story = []
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('HeaderTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=12, leading=14, alignment=TA_CENTER, textColor=colors.HexColor('#6b1d1d'))
+    normal_style = ParagraphStyle('BodyTextCustom', parent=styles['Normal'], fontName='Helvetica', fontSize=10, leading=14, alignment=TA_LEFT)
+    bold_style = ParagraphStyle('BoldTextCustom', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=10, leading=14)
+
+    header_html = "<b>ROYAL GOVERNMENT OF BHUTAN</b><br/><b>DZONGKHAG ADMINISTRATION: TRASHIGANG</b><br/><font size=9 color='#555555'>CULTURE SECTOR</font>"
+    story.append(Paragraph(header_html, title_style))
+    story.append(Spacer(1, 15))
+    
+    story.append(Table([['']], colWidths=[540], rowHeights=[2], style=TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#6b1d1d')),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 0), ('TOPPADDING', (0,0), (-1,-1), 0)
+    ])))
+    story.append(Spacer(1, 15))
+    
+    meta_data = [
+        [Paragraph(f"<b>Clearance Ref No:</b> {app_data['id']}", normal_style), Paragraph(f"<b>Date:</b> October 5, 2026", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))],
+        [Paragraph(f"<b>Subject:</b> Cultural Heritage Approval Certificate", normal_style), Paragraph(f"<b>Status:</b> <font color='green'>{app_data['status']}</font>", ParagraphStyle('RightText', parent=normal_style, alignment=TA_RIGHT))]
+    ]
+    meta_table = Table(meta_data, colWidths=[300, 240])
+    meta_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP'), ('BOTTOMPADDING', (0,0), (-1,-1), 4)]))
+    story.append(meta_table)
+    story.append(Spacer(1, 15))
+    
+    story.append(Paragraph("<b><u>APPLICATION DETAILS</u></b>", bold_style))
+    story.append(Spacer(1, 8))
+    
+    table_data = [
+        [Paragraph("<b>Field</b>", bold_style), Paragraph("<b>Details</b>", bold_style)],
+        [Paragraph("Applicant Name", normal_style), Paragraph(app_data['applicant'], normal_style)],
+        [Paragraph("Heritage Site", normal_style), Paragraph(app_data['site'], normal_style)],
+        [Paragraph("Gewog / Location", normal_style), Paragraph(app_data['gewog'], normal_style)],
+        [Paragraph("Construction Type", normal_style), Paragraph(app_data['construction_type'], normal_style)],
+        [Paragraph("Scope of Work", normal_style), Paragraph(app_data['purpose'], normal_style)],
+    ]
+    
+    details_table = Table(table_data, colWidths=[160, 380])
+    details_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#f0e6e6')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#6b1d1d')),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cccccc')),
+        ('TOPPADDING', (0,0), (-1,-1), 6), ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    story.append(details_table)
+    story.append(Spacer(1, 20))
+    
+    if app_data.get('supervisor_remarks'):
+        story.append(Paragraph(f"<b>Approval & Endorsement Remarks:</b> {app_data['supervisor_remarks']}", normal_style))
+        story.append(Spacer(1, 25))
+    
+    approver_role = app_data.get('approved_by') or app_data.get('assigned_supervisor', 'Dzongdag')
+    sup_info = officials_settings.get(approver_role, officials_settings['Dzongdag'])
+    co_info = officials_settings.get('Cultural Officer', officials_settings['Cultural Officer'])
+
+    co_offtg_str = "Offtg. " if co_info.get('is_officiating') else ""
+    sup_offtg_str = "Offtg. " if sup_info.get('is_officiating') else ""
+
+    co_title = f"{co_offtg_str}Cultural Officer"
+    sup_title = f"{sup_offtg_str}{'Dasho Dzongdag' if approver_role == 'Dzongdag' else 'Dzongrab'}"
+
+    sig_data = [
+        [
+            Paragraph(f"<b>Verified By:</b><br/><br/><br/>_______________________<br/><b>({co_info['name']})</b><br/><b>{co_title}</b><br/>Trashigang Dzongkhag", normal_style),
+            Paragraph(f"<b>Approved & Endorsed By:</b><br/><br/><br/>_______________________<br/><b>({sup_info['name']})</b><br/><b>{sup_title}</b><br/>Trashigang Dzongkhag", normal_style)
+        ]
+    ]
+    sig_table = Table(sig_data, colWidths=[270, 270])
+    sig_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP')]))
+    story.append(Spacer(1, 30))
+    story.append(sig_table)
+    
+    doc.build(story)
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name=f"Approved_Construction_{app_id}.pdf", mimetype='application/pdf')
+
 @app.route('/download-notesheet-pdf/<ns_id>')
 def download_notesheet_pdf(ns_id):
     ns = next((item for item in notesheets if item["id"] == ns_id), None)
