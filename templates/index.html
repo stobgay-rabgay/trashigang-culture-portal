@@ -3,329 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trashigang Dzongkhag - Culture Sector Portal</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; }
-        .top-navbar { background-color: #6b1d1d; color: white; }
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background-color: #ffffff;
-            border-right: 1px solid #dee2e6;
-        }
-        .sidebar .nav-link {
-            color: #333;
-            font-weight: 500;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 4px;
-            display: block;
-            text-decoration: none;
-        }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            background-color: #f0e6e6;
-            color: #6b1d1d;
-        }
-        .role-btn {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 4px 10px;
-            font-size: 0.85rem;
-            border-radius: 4px;
-            text-decoration: none;
-        }
-        .role-btn:hover { background-color: rgba(255, 255, 255, 0.3); color: white; }
-        .role-btn.active-role { background-color: #ffffff; color: #6b1d1d; font-weight: bold; }
-        .badge-status { font-size: 0.85rem; padding: 0.4em 0.7em; }
-    </style>
+    <title>Dzongkhag Culture Sector Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800 flex h-screen overflow-hidden">
 
-    <!-- Top Navigation Bar -->
-    <nav class="navbar top-navbar px-3">
-        <span class="navbar-brand text-white fw-bold">Trashigang Dzongkhag - Culture Sector</span>
-        <div class="d-flex align-items-center gap-2">
-            <span class="text-light me-2 small">Switch Mode:</span>
-            <a href="/switch-role?role=Applicant" class="role-btn {% if active_role == 'Applicant' %}active-role{% endif %}">Applicant</a>
-            <a href="/switch-role?role=Admin" class="role-btn {% if active_role == 'Admin' %}active-role{% endif %}">Admin</a>
-            <a href="/switch-role?role=Dzongdag" class="role-btn {% if active_role == 'Dzongdag' %}active-role{% endif %}">Dzongdag</a>
-            <a href="/switch-role?role=Dzongrab" class="role-btn {% if active_role == 'Dzongrab' %}active-role{% endif %}">Dzongrab</a>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
+    <!-- Sidebar Navigation -->
+    <div class="w-64 bg-stone-900 text-white flex flex-col justify-between p-4 flex-shrink-0">
+        <div>
+            <div class="flex items-center space-x-3 mb-8 border-b border-stone-700 pb-4">
+                <i class="fa-solid fa-monument text-amber-500 text-2xl"></i>
+                <span class="font-bold text-lg">Culture Sector</span>
+            </div>
             
-            <!-- Sidebar Navigation -->
-            <nav class="col-md-3 col-lg-2 sidebar p-3">
-                <div class="text-uppercase text-muted small fw-bold mb-3 px-2">
-                    {{ active_role }} Menu
-                </div>
-                
-                <div class="nav flex-column">
-                    <a class="nav-link {% if view == 'construction' %}active{% endif %}" href="/?view=construction"><i class="bi bi-building me-2"></i>Construction</a>
-                    <a class="nav-link {% if view == 'notesheet' %}active{% endif %}" href="/?view=notesheet"><i class="bi bi-file-earmark-text me-2"></i>Notesheet</a>
-                    <a class="nav-link {% if view == 'settings' %}active{% endif %}" href="/?view=settings"><i class="bi bi-gear-fill me-2"></i>Official Settings</a>
-                </div>
+            <nav class="space-y-2">
+                <a href="/?view=construction" class="flex items-center space-x-3 p-3 rounded hover:bg-stone-800 {% if view == 'construction' %}bg-amber-700 text-white{% else %}text-gray-300{% endif %}">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <span class="font-medium">Construction</span>
+                </a>
+                <a href="/?view=notesheet" class="flex items-center space-x-3 p-3 rounded hover:bg-stone-800 {% if view == 'notesheet' %}bg-amber-700 text-white{% else %}text-gray-300{% endif %}">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <span class="font-medium">Notesheet</span>
+                </a>
+                <a href="/?view=settings" class="flex items-center space-x-3 p-3 rounded hover:bg-stone-800 {% if view == 'settings' %}bg-amber-700 text-white{% else %}text-gray-300{% endif %}">
+                    <i class="fa-solid fa-gears"></i>
+                    <span class="font-medium">Official Settings</span>
+                </a>
             </nav>
-
-            <!-- Main Content Area -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                {% if msg %}
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    {{ msg }}
-                    <a href="/?view={{ view }}" class="btn-close" aria-label="Close"></a>
-                </div>
-                {% endif %}
-
-                <!-- CONSTRUCTION SECTION -->
-                {% if view == 'construction' %}
-                <h2 class="mb-4">Cultural Heritage Construction & Renovation Application</h2>
-
-                {% if active_role == 'Applicant' %}
-                <div class="card shadow-sm mb-4 border-danger">
-                    <div class="card-header bg-danger text-white fw-bold">
-                        <i class="bi bi-file-earmark-plus me-2"></i>New Heritage Construction Application Form
-                    </div>
-                    <div class="card-body">
-                        <form action="/apply-construction" method="POST">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Applicant Name / Representative:</label>
-                                    <input type="text" name="applicant" class="form-control form-control-sm" required placeholder="e.g. Sonam Chophel">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Gewog / Location:</label>
-                                    <input type="text" name="gewog" class="form-control form-control-sm" required placeholder="e.g. Radhi Gewog">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Heritage Site Name (Lhakhang/Chorten):</label>
-                                    <input type="text" name="site" class="form-control form-control-sm" required placeholder="e.g. Radhi Pakshaling Lhakhang">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold small">Type of Work:</label>
-                                    <select name="construction_type" class="form-select form-select-sm">
-                                        <option value="New Construction">New Construction</option>
-                                        <option value="Renovation / Restoration">Renovation / Restoration</option>
-                                        <option value="Expansion / Structural Change">Expansion / Structural Change</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label fw-bold small">Detailed Proposal & Justification:</label>
-                                    <textarea name="purpose" class="form-control form-control-sm" rows="3" required placeholder="Describe details of work, timber requirement, wall painting, or structural changes..."></textarea>
-                                </div>
-                                <div class="col-md-12 text-end">
-                                    <button type="submit" class="btn btn-danger btn-sm fw-bold px-4">Submit Application</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                {% endif %}
-
-                <h5 class="fw-bold mb-3">Submitted Applications</h5>
-                {% for app in apps %}
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="card-title text-danger mb-0">{{ app.id }}: {{ app.site }}</h5>
-                            <span class="badge {% if 'Approved' in app.status %}bg-success{% else %}bg-warning text-dark{% endif %} badge-status">{{ app.status }}</span>
-                        </div>
-                        <p class="text-muted small mb-2">
-                            Applicant: <strong>{{ app.applicant }}</strong> | Gewog: {{ app.gewog }} | Type: <strong>{{ app.construction_type }}</strong>
-                        </p>
-                        <p class="card-text"><strong>Purpose:</strong> {{ app.purpose }}</p>
-
-                        {% if app.supervisor_remarks %}
-                        <div class="alert alert-light border-start border-4 border-success py-2 my-2">
-                            <small class="fw-bold text-muted">Supervisor Remarks:</small>
-                            <p class="mb-0">{{ app.supervisor_remarks }}</p>
-                        </div>
-                        {% endif %}
-
-                        <!-- Download PDF Button for Approved Construction Application -->
-                        {% if 'Approved' in app.status %}
-                        <div class="mt-3 border-top pt-2">
-                            <a href="/download-construction-pdf/{{ app.id }}" class="btn btn-danger btn-sm">
-                                <i class="bi bi-file-pdf me-1"></i> Download Approved Clearance PDF
-                            </a>
-                        </div>
-                        {% endif %}
-
-                    </div>
-                </div>
-                {% endfor %}
-                {% endif %}
-
-                <!-- OFFICIAL MANAGEMENT SETTINGS -->
-                {% if view == 'settings' %}
-                <h2 class="mb-4"><i class="bi bi-sliders me-2"></i>Official Management & Officiating Settings</h2>
-                <div class="card shadow-sm border-secondary col-md-8">
-                    <div class="card-header bg-dark text-white fw-bold">Configure Official Names & Officiating Designations</div>
-                    <div class="card-body">
-                        <form action="/update-settings" method="POST">
-                            <h6 class="fw-bold text-primary mb-3">1. Dasho Dzongdag Details</h6>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-7">
-                                    <label class="form-label small fw-bold">Official Name:</label>
-                                    <input type="text" name="dzongdag_name" class="form-control form-control-sm" value="{{ settings['Dzongdag']['name'] }}">
-                                </div>
-                                <div class="col-md-5 d-flex align-items-end">
-                                    <div class="form-check form-switch mb-1">
-                                        <input class="form-check-input" type="checkbox" name="dzongdag_offtg" id="dzongdagOfftg" {% if settings['Dzongdag']['is_officiating'] %}checked{% endif %}>
-                                        <label class="form-check-label fw-bold small text-danger" for="dzongdagOfftg">Currently Officiating (Offtg. Dasho Dzongdag)</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h6 class="fw-bold text-primary mb-3">2. Dzongrab Details</h6>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-7">
-                                    <label class="form-label small fw-bold">Official Name:</label>
-                                    <input type="text" name="dzongrab_name" class="form-control form-control-sm" value="{{ settings['Dzongrab']['name'] }}">
-                                </div>
-                                <div class="col-md-5 d-flex align-items-end">
-                                    <div class="form-check form-switch mb-1">
-                                        <input class="form-check-input" type="checkbox" name="dzongrab_offtg" id="dzongrabOfftg" {% if settings['Dzongrab']['is_officiating'] %}checked{% endif %}>
-                                        <label class="form-check-label fw-bold small text-danger" for="dzongrabOfftg">Currently Officiating (Offtg. Dzongrab)</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h6 class="fw-bold text-primary mb-3">3. Cultural Officer Details</h6>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-7">
-                                    <label class="form-label small fw-bold">Official Name:</label>
-                                    <input type="text" name="co_name" class="form-control form-control-sm" value="{{ settings['Cultural Officer']['name'] }}">
-                                </div>
-                                <div class="col-md-5 d-flex align-items-end">
-                                    <div class="form-check form-switch mb-1">
-                                        <input class="form-check-input" type="checkbox" name="co_offtg" id="coOfftg" {% if settings['Cultural Officer']['is_officiating'] %}checked{% endif %}>
-                                        <label class="form-check-label fw-bold small text-danger" for="coOfftg">Currently Officiating (Offtg. Cultural Officer)</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary btn-sm fw-bold"><i class="bi bi-save me-1"></i> Save Official Settings</button>
-                        </form>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- NOTESHEET VIEW -->
-                {% if view == 'notesheet' %}
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>Notesheet Section</h2>
-                </div>
-
-                {% if active_role == 'Admin' %}
-                <div class="card shadow-sm mb-4 border-primary">
-                    <div class="card-header bg-primary text-white fw-bold">
-                        <i class="bi bi-pencil-square me-2"></i>Create & Forward Notesheet
-                    </div>
-                    <div class="card-body">
-                        <form action="/add-notesheet" method="POST">
-                            <div class="row g-3">
-                                <div class="col-md-5">
-                                    <label class="form-label fw-bold small">Notesheet Subject / Title:</label>
-                                    <input type="text" name="title" class="form-control form-control-sm" required placeholder="e.g. Wall Restoration Sanction">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold small">Amount (Nu.):</label>
-                                    <input type="text" name="amount" class="form-control form-control-sm" required placeholder="e.g. 250,000">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Send Directly To:</label>
-                                    <select name="target_supervisor" class="form-select form-select-sm fw-bold border-primary">
-                                        <option value="Dzongdag">
-                                            {% if settings['Dzongdag']['is_officiating'] %}Offtg. {% endif %}Dasho Dzongdag ({{ settings['Dzongdag']['name'] }})
-                                        </option>
-                                        <option value="Dzongrab">
-                                            {% if settings['Dzongrab']['is_officiating'] %}Offtg. {% endif %}Dzongrab ({{ settings['Dzongrab']['name'] }})
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label fw-bold small">Notesheet Proposal Details / Purpose:</label>
-                                    <textarea name="details" class="form-control form-control-sm" rows="3" required placeholder="Describe the purpose and justification..."></textarea>
-                                </div>
-                                <div class="col-md-12 text-end">
-                                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-4">Submit & Forward Notesheet</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                {% endif %}
-
-                <h5 class="fw-bold mb-3">Submitted Notesheets</h5>
-                {% for ns in notesheets %}
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="card-title text-danger mb-0">{{ ns.id }}: {{ ns.title }}</h5>
-                            <span class="badge {% if 'Approved' in ns.status %}bg-success{% else %}bg-warning text-dark{% endif %} badge-status">{{ ns.status }}</span>
-                        </div>
-                        <p class="text-muted small mb-2">
-                            Submitted By: {% if settings['Cultural Officer']['is_officiating'] %}Offtg. {% endif %}{{ settings['Cultural Officer']['name'] }} (Cultural Officer) | 
-                            <strong>Amount: Nu. {{ ns.amount }}</strong> | 
-                            Assigned To: <span class="badge bg-secondary">
-                                {% set target = ns.assigned_supervisor %}
-                                {% if settings[target]['is_officiating'] %}Offtg. {% endif %}{{ target }} ({{ settings[target]['name'] }})
-                            </span>
-                        </p>
-                        <p class="card-text">{{ ns.details }}</p>
-
-                        {% if ns.remarks %}
-                        <div class="alert alert-light border-start border-4 border-warning py-2 my-2">
-                            <small class="fw-bold text-muted">Supervisor Remarks:</small>
-                            <p class="mb-0">{{ ns.remarks }}</p>
-                        </div>
-                        {% endif %}
-
-                        <!-- Executive Review & Forward Action Panel -->
-                        {% if active_role in ['Dzongdag', 'Dzongrab'] and not 'Approved' in ns.status %}
-                        <div class="border-top pt-3 mt-3">
-                            <h6 class="fw-bold text-primary">Executive Action & Forward Panel ({{ active_role }})</h6>
-                            <form action="/notesheet-action" method="POST" class="row g-2">
-                                <input type="hidden" name="ns_id" value="{{ ns.id }}">
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control form-control-sm" name="remarks" placeholder="Enter Review / Endorsement Remarks">
-                                </div>
-                                <div class="col-md-4">
-                                    <select name="forward_to" class="form-select form-select-sm">
-                                        <option value="Dzongdag">Forward to {% if settings['Dzongdag']['is_officiating'] %}Offtg. {% endif %}Dzongdag</option>
-                                        <option value="Dzongrab">Forward to {% if settings['Dzongrab']['is_officiating'] %}Offtg. {% endif %}Dzongrab</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-12 text-end gap-2 d-flex justify-content-end">
-                                    <button type="submit" name="action_type" value="forward" class="btn btn-outline-primary btn-sm fw-bold"><i class="bi bi-send me-1"></i> Forward Notesheet</button>
-                                    <button type="submit" name="action_type" value="approve" class="btn btn-success btn-sm fw-bold"><i class="bi bi-check-circle me-1"></i> Approve & Sign Notesheet</button>
-                                    <button type="submit" name="action_type" value="return" class="btn btn-danger btn-sm fw-bold">Return</button>
-                                </div>
-                            </form>
-                        </div>
-                        {% endif %}
-
-                        <!-- Download PDF Button for Approved Notesheet -->
-                        {% if 'Approved' in ns.status %}
-                        <div class="mt-3 border-top pt-2">
-                            <a href="/download-notesheet-pdf/{{ ns.id }}" class="btn btn-danger btn-sm">
-                                <i class="bi bi-file-pdf me-1"></i> Download Formatted Notesheet PDF
-                            </a>
-                        </div>
-                        {% endif %}
-
-                    </div>
-                </div>
-                {% endfor %}
-
-                {% endif %}
-
-            </main>
         </div>
+
+        <div class="border-t border-stone-700 pt-4">
+            <p class="text-xs text-stone-400 mb-2">Active Mode: <b class="text-amber-400">{{ active_role }}</b></p>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <a href="/switch-role?role=Applicant" class="bg-stone-800 hover:bg-stone-700 text-center py-2 rounded">Applicant</a>
+                <a href="/switch-role?role=Dzongdag" class="bg-stone-800 hover:bg-stone-700 text-center py-2 rounded">Dzongdag</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 overflow-y-auto p-8">
+        {% if msg %}
+        <div class="mb-6 bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded relative">
+            <span>{{ msg }}</span>
+        </div>
+        {% endif %}
+
+        {% if view == 'construction' %}
+        <div class="max-w-5xl mx-auto space-y-8">
+            <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Cultural Heritage Construction & Clearance Application</h1>
+
+            <!-- Heritage Application Form -->
+            <div class="bg-white rounded-lg shadow-md border border-stone-200 overflow-hidden">
+                <div class="bg-red-800 text-white px-6 py-4 font-bold flex items-center space-x-2">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>New Heritage Clearance Application Form</span>
+                </div>
+
+                <form action="/apply-construction" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+                    
+                    <!-- Basic Information -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-red-800"></i> 1. Basic Application Details
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Applicant / Focal Representative Name *</label>
+                                <input type="text" name="applicant" required placeholder="e.g. Sonam Chophel" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Gewog / Location *</label>
+                                <input type="text" name="gewog" required placeholder="e.g. Radhi Gewog" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Heritage Site Name (Lhakhang/Chorten/Site) *</label>
+                                <input type="text" name="site" required placeholder="e.g. Radhi Pakshaling Lhakhang" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Category of Construction / Work *</label>
+                                <select name="construction_type" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none bg-white">
+                                    <option value="New Construction">I. New Construction (30 Days TAT - Path A)</option>
+                                    <option value="Reconstruction">II. Reconstruction (30 Days TAT - Path A)</option>
+                                    <option value="Major Renovation">III. Renovation (Major) (30 Days TAT - Path A/B)</option>
+                                    <option value="Minor Renovation">III. Renovation (Minor) (7 Days TAT - Path B)</option>
+                                    <option value="Site Development Work">IV. Site Development Works (7 Days TAT - Path B)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Land & Location Details -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-red-800"></i> 2. Land & Location Identification
+                        </h2>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Thram Number *</label>
+                                <input type="text" name="thram_no" required placeholder="e.g. TH-8921" class="w-full border border-gray-300 rounded p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Plot Number *</label>
+                                <input type="text" name="plot_no" required placeholder="e.g. PL-102" class="w-full border border-gray-300 rounded p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">GIS / GPS Coordinates *</label>
+                                <input type="text" name="gis_location" required placeholder="e.g. 27.3241° N, 91.6142° E" class="w-full border border-gray-300 rounded p-2 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Implementation & Funding -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-users-gear text-red-800"></i> 3. Work Modality & Financial Source
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Work Modality / Execution Coordinator *</label>
+                                <input type="text" name="work_modality" required placeholder="e.g. Local Gewog Committee / Direct Department Execution" class="w-full border border-gray-300 rounded p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Post-Completion Management Entity *</label>
+                                <input type="text" name="management_entity" required placeholder="e.g. Community Lhakhang Management / Zhung Dratshang" class="w-full border border-gray-300 rounded p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Source of Budget *</label>
+                                <select name="budget_source" class="w-full border border-gray-300 rounded p-2 text-sm bg-white">
+                                    <option value="Government Funding">Government Funding (5-Year Plan / Annual Culture Fund)</option>
+                                    <option value="Private Funding">Private Funding / Sponsor Donation</option>
+                                    <option value="Community Donation">Community Contribution</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Target Forwarding Official *</label>
+                                <select name="target_supervisor" class="w-full border border-gray-300 rounded p-2 text-sm bg-white">
+                                    <option value="Dzongdag">Dasho Dzongdag</option>
+                                    <option value="Dzongrab">Dzongrab</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scope & Proposal Justification -->
+                    <div class="border-b border-gray-200 pb-4">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Detailed Proposal & Need Assessment Justification *</label>
+                        <textarea name="purpose" rows="3" required placeholder="Describe details of proposed activity, need assessment, wall painting, or structural timber replacement..." class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-2 focus:ring-red-800 focus:outline-none"></textarea>
+                    </div>
+
+                    <!-- Mandatory Document Attachments -->
+                    <div>
+                        <h2 class="text-md font-bold text-stone-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-file-arrow-up text-red-800"></i> 4. Required Attachments & Checklist
+                        </h2>
+                        <div class="grid grid-cols-2 gap-4 bg-stone-50 p-4 rounded border border-stone-200 text-xs">
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-1">1. Community Clearance (Gewog Endorsed) *</label>
+                                <input type="file" name="doc_community_clearance" class="w-full bg-white border border-gray-300 rounded p-1">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-1">2. Site Plan & Location Image *</label>
+                                <input type="file" name="doc_site_plan" class="w-full bg-white border border-gray-300 rounded p-1">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-1">3. Drawings (Architectural/Structural) *</label>
+                                <input type="file" name="doc_drawings" class="w-full bg-white border border-gray-300 rounded p-1">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-1">4. Cost Estimate / BoQ *</label>
+                                <input type="file" name="doc_estimate" class="w-full bg-white border border-gray-300 rounded p-1">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block font-semibold text-gray-700 mb-1">5. Letter of Surety / Budget Assurance (for Private Funding)</label>
+                                <input type="file" name="doc_budget_surety" class="w-full bg-white border border-gray-300 rounded p-1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <button type="submit" class="bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 px-6 rounded shadow transition duration-200">
+                            Submit Heritage Application
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- List of Submitted Applications -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-bold text-stone-900">Submitted Applications</h2>
+                
+                {% for app in apps %}
+                <div class="bg-white rounded-lg border border-stone-200 p-6 shadow-sm space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-red-800 font-bold text-lg">{{ app.id }}</span>: 
+                            <span class="font-bold text-lg text-gray-800">{{ app.site }}</span>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-300">
+                            {{ app.status }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded">
+                        <p><b>Applicant:</b> {{ app.applicant }}</p>
+                        <p><b>Gewog:</b> {{ app.gewog }}</p>
+                        <p><b>Category:</b> {{ app.construction_type }}</p>
+                        <p><b>Thram / Plot:</b> {{ app.thram_no }} / {{ app.plot_no }}</p>
+                        <p><b>Modality:</b> {{ app.work_modality }}</p>
+                        <p><b>Budget:</b> {{ app.budget_source }}</p>
+                    </div>
+
+                    <p class="text-sm text-gray-700"><b>Purpose & Scope:</b> {{ app.purpose }}</p>
+
+                    {% if app.supervisor_remarks %}
+                    <div class="bg-green-50 border-l-4 border-green-600 p-3 text-xs text-green-900">
+                        <b>Supervisor Remarks:</b> {{ app.supervisor_remarks }}
+                    </div>
+                    {% endif %}
+
+                    <div>
+                        <a href="/download-construction-pdf/{{ app.id }}" class="inline-flex items-center gap-2 bg-red-800 hover:bg-red-900 text-white text-xs font-bold py-2 px-4 rounded">
+                            <i class="fa-solid fa-file-pdf"></i> Download Approved Clearance PDF
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% elif view == 'notesheet' %}
+        <div class="max-w-4xl mx-auto space-y-6">
+            <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Official Culture Notesheets</h1>
+            <!-- Notesheet content -->
+        </div>
+        {% elif view == 'settings' %}
+        <div class="max-w-3xl mx-auto space-y-6">
+            <h1 class="text-2xl font-bold text-stone-900 border-b border-gray-300 pb-3">Official Designations & Officiating Settings</h1>
+        </div>
+        {% endif %}
     </div>
 
 </body>
