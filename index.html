@@ -223,7 +223,6 @@
       const nationality = document.getElementById('reg-nationality').value;
       const gender = document.getElementById('reg-gender').value;
 
-      // Update counters
       let attendees = parseInt(document.getElementById('stat-attendees').innerText);
       let bhutanese = parseInt(document.getElementById('stat-bhutanese').innerText);
       let male = parseInt(document.getElementById('stat-male').innerText);
@@ -239,7 +238,6 @@
       document.getElementById('stat-male').innerText = male;
       document.getElementById('stat-female').innerText = female;
 
-      // Save member record
       const member = { name, cid, nationality, gender };
       localStorage.setItem('p108_member_' + cid, JSON.stringify(member));
 

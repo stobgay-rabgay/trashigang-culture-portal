@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dzongkhag Administration Workspace</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f5f6fa; color: #333; }
+        
+        /* Sidebar Navigation */
+        .sidebar { width: 280px; background-color: #111a2e; color: #a6b0cf; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #1e2d4a; }
+        .sidebar-header h2 { color: #f5a623; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar-header p { font-size: 11px; color: #7f8b9f; }
+        
+        .user-badge { background: #192642; margin: 15px; padding: 15px; border-radius: 6px; border-left: 4px solid #f5a623; }
+        .user-badge label { font-size: 10px; text-transform: uppercase; color: #f5a623; display: block; font-weight: bold; }
+        .user-badge .title { font-weight: bold; color: #fff; font-size: 13px; margin-top: 3px; }
+        .user-badge .sub { font-size: 11px; color: #8c9ba5; }
+
+        .nav-list { list-style: none; padding: 10px 0; }
+        .nav-item { padding: 12px 20px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .nav-item.active, .nav-item:hover { background-color: #1a2744; color: #fff; }
+        .nav-item.logout { color: #ff6b6b; margin-top: auto; border-top: 1px solid #1e2d4a; }
+
+        /* Main Content Workspace */
+        .main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+        .header-bar { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e6ed; }
+        .header-title h1 { font-size: 18px; color: #8b0000; font-weight: bold; }
+        .header-title span { font-size: 12px; color: #666; }
+        .tag-local { background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
+        .container { padding: 30px; max-width: 900px; }
+        .card { background: #fff; border-radius: 8px; border: 1px solid #e0e6ed; box-shadow: 0 2px 4px rgba(0,0,0,0.02); padding: 25px; margin-bottom: 20px; }
+        .card-header { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 20px; color: #8b0000; font-weight: bold; font-size: 15px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; text-transform: uppercase; color: #555; margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background-color: #fdfdfd; }
+        
+        .btn-submit { background-color: #8b0000; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-submit:hover { background-color: #6a0000; }
+
+        /* Signature Display */
+        .sig-preview-box { border: 1px dashed #ccc; padding: 15px; width: 220px; height: 80px; display: flex; align-items: center; justify-content: center; background: #fafafa; margin-top: 10px; }
+        .sig-preview-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Dzongkhag Administration</h2>
+            <p>TRASHIGANG | KINGDOM OF BHUTAN</p>
+        </div>
+
+        <div class="user-badge">
+            <label>Current Active Account</label>
+            <div class="title" id="side-official-name">Loading...</div>
+            <div class="sub" id="side-jurisdiction">Loading...</div>
+        </div>
+
+        <ul class="nav-list">
+            <li class="nav-item">Workspace & Queue</li>
+            <li class="nav-item">Gewog Gup Approval Console</li>
+            <li class="nav-item">Culture Sector Citizen Portal</li>
+            <li class="nav-item">Summary & Financial Reports</li>
+            <li class="nav-item active">Profile & Stamp Settings</li>
+            <li class="nav-item logout" onclick="window.location.href='/api/logout'">Log Out / Switch Account</li>
+        </ul>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="header-bar">
+            <div class="header-title">
+                <h1 id="top-title">Workspace Dashboard</h1>
+                <span>Jurisdiction: <strong id="top-jurisdiction">-</strong></span>
+            </div>
+            <span class="tag-local">SECURE SESSION</span>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <div class="card-header">Account Credentials & Digital Signature Stamp</div>
+                
+                <div class="form-group">
+                    <label>Officer / Official Name</label>
+                    <input type="text" class="form-control" id="officer-name" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>Jurisdiction / Designation</label>
+                    <input type="text" class="form-control" id="jurisdiction-field" readonly>
+                </div>
+
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+                <div class="form-group">
+                    <label>Upload Official Signature / Stamp Image (PNG/JPEG)</label>
+                    <form action="/api/upload-signature" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="signature" class="form-control" accept="image/*" required style="margin-bottom: 12px;">
+                        <button type="submit" class="btn-submit">Save Signature Settings</button>
+                    </form>
+                </div>
+
+                <div class="form-group">
+                    <label>Active Digital Stamp Preview</label>
+                    <div class="sig-preview-box" id="sig-container">
+                        <span style="font-size: 11px; color: #aaa;">No Stamp Uploaded</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch logged-in user profile from Express session
+        fetch('/api/user-data')
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login.html';
+                }
+                return response.json();
+            })
+            .then(user => {
+                document.getElementById('side-official-name').innerText = user.official_name;
+                document.getElementById('side-jurisdiction').innerText = user.jurisdiction;
+                
+                document.getElementById('top-title').innerText = user.official_name + ' Workspace';
+                document.getElementById('top-jurisdiction').innerText = user.jurisdiction;
+                
+                document.getElementById('officer-name').value = user.official_name;
+                document.getElementById('jurisdiction-field').value = user.jurisdiction;
+
+                if (user.signature_path) {
+                    document.getElementById('sig-container').innerHTML = `<img src="${user.signature_path}" alt="Digital Signature">`;
+                }
+            })
+            .catch(err => console.error("Error loading profile:", err));
+    </script>
+</body>
+</html>
